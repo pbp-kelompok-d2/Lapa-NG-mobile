@@ -115,7 +115,7 @@ Fitur yang dapat digunakan oleh user biasa antara lain:
 <details>
 <summary>💻📲 Alur Pengintegrasian dengan Web Service</summary>
 
-mermaid
+```mermaid
 graph LR
     A[User Input] -->|1. Interaksi| B(Flutter Client)
     B -->|2. Request API| C{Django Server}
@@ -126,6 +126,7 @@ graph LR
 
     style B fill:#f9f,stroke:#333,stroke-width:2px
     style C fill:#bbf,stroke:#333,stroke-width:2px
+```
 
 
 Aplikasi **LapaNG Mobile** terhubung dengan **LapaNG Web** (Django) menggunakan arsitektur Client-Server dan pertukaran data melalui **REST API**. Berikut adalah tahapan pengintegrasiannya:
