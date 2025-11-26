@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lapa_ng_mobile/models/reviews.dart';
+import 'package:lapang/models/reviews.dart';
 
 class ReviewCard extends StatelessWidget {
   final Review review;

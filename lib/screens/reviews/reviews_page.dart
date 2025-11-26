@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:lapa_ng_mobile/models/reviews.dart';
-import 'package:lapa_ng_mobile/widgets/reviews/reviews_card.dart';
-import 'package:lapa_ng_mobile/screens/reviews/reviews_form_page.dart';
+import 'package:lapang/models/reviews.dart';
+import 'package:lapang/widgets/reviews/reviews_card.dart';
+import 'package:lapang/screens/reviews/reviews_form_page.dart';
 
 class ReviewsPage extends StatefulWidget {
   const ReviewsPage({super.key});

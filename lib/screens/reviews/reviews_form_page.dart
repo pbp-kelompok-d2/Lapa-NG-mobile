@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:lapa_ng_mobile/screens/reviews/reviews_page.dart';
+import 'reviews_page.dart';
 
 class ReviewFormPage extends StatefulWidget {
   const ReviewFormPage({super.key});
