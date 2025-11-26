@@ -1,47 +1,77 @@
 import 'dart:convert';
 
+List<Venue> venueFromJson(String str) => List<Venue>.from(json.decode(str).map((x) => Venue.fromJson(x)));
+
+String venueToJson(List<Venue> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+
 class Venue {
-  final int id;
-  final String name;
-  final String category;
-  final String address;
-  final int? price;
-  final int? capacity;
-  final String? openingTime;
-  final String? closingTime;
-  final String imageUrl;
-  final bool isFeatured;
-  final String? description;
+  String model;
+  int pk;
+  Fields fields;
 
   Venue({
-    required this.id,
+    required this.model,
+    required this.pk,
+    required this.fields,
+  });
+
+  factory Venue.fromJson(Map<String, dynamic> json) => Venue(
+    model: json["model"],
+    pk: json["pk"],
+    fields: Fields.fromJson(json["fields"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "model": model,
+    "pk": pk,
+    "fields": fields.toJson(),
+  };
+}
+
+class Fields {
+  String name;
+  String category;
+  String address;
+  int? price;
+  int capacity;
+  int rating;
+  String imageUrl;
+  bool isFeatured;
+  String description;
+
+  Fields({
     required this.name,
     required this.category,
     required this.address,
     this.price,
-    this.capacity,
-    this.openingTime,
-    this.closingTime,
+    required this.capacity,
+    required this.rating,
     required this.imageUrl,
     required this.isFeatured,
-    this.description,
+    required this.description,
   });
 
-  factory Venue.fromJson(Map<String, dynamic> json) {
-    // Django JSON format: { "pk": 1, "fields": { ... } }
-    final fields = json['fields'];
-    return Venue(
-      id: json['pk'],
-      name: fields['name'],
-      category: fields['category'],
-      address: fields['address'],
-      price: fields['price'],
-      capacity: fields['capacity'],
-      openingTime: fields['opening_time'],
-      closingTime: fields['closing_time'],
-      imageUrl: fields['image_url'] ?? '',
-      isFeatured: fields['is_featured'] ?? false,
-      description: fields['description'],
-    );
-  }
+  factory Fields.fromJson(Map<String, dynamic> json) => Fields(
+    name: json["name"],
+    category: json["category"],
+    address: json["address"],
+    price: json["price"],
+    capacity: json["capacity"] ?? 0,
+    rating: json["rating"] ?? 0,
+    imageUrl: json["image_url"] ?? "",
+    isFeatured: json["is_featured"] ?? false,
+    description: json["description"] ?? "-",
+  );
+
+  Map<String, dynamic> toJson() => {
+    "name": name,
+    "category": category,
+    "address": address,
+    "price": price,
+    "capacity": capacity,
+    "rating": rating,
+    "image_url": imageUrl,
+    "is_featured": isFeatured,
+    "description": description,
+  };
 }
