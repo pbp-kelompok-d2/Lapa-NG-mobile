@@ -32,6 +32,8 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Center(
@@ -39,7 +41,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
             'Tambah Review',
           ),
         ),
-        backgroundColor: Colors.indigo,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: Form(
@@ -58,6 +60,9 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     labelText: "Nama Lapangan/Venue",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
                     ),
                   ),
                   onChanged: (String? value) {
@@ -89,7 +94,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     return DropdownMenuItem<String>(
                       value: type,
                       child: Text(
-                        type[0].toUpperCase() + type.substring(1), // kapitalisasi
+                        type[0].toUpperCase() + type.substring(1),
                       ),
                     );
                   }).toList(),
@@ -136,6 +141,9 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                   maxLines: 3,
                   onChanged: (String? value) {
@@ -162,6 +170,9 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                   onChanged: (String? value) {
                     setState(() {
@@ -178,7 +189,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
+                      backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 50),
                     ),

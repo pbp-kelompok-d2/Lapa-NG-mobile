@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lapang/screens/home/home_page.dart';
 // TODO: Import halaman teman-teman lain di sini
 // import 'package:lapang/screens/booking/booking_page.dart';
+import 'package:lapang/screens/reviews/reviews_page.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -50,6 +51,18 @@ class LeftDrawer extends StatelessWidget {
                   MaterialPageRoute(
                     builder: (context) => const HomePage(),
                   ));
+            },
+          ),
+
+          // ===  REVIEW ===
+          ListTile(
+            leading: const Icon(Icons.reviews),
+            title: const Text('Review Lapangan'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReviewsPage()),
+              );
             },
           ),
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:lapang/models/reviews.dart';
 import 'package:lapang/widgets/reviews/reviews_card.dart';
 import 'package:lapang/screens/reviews/reviews_form_page.dart';
+import 'package:lapang/widgets/left_drawer.dart';
 
 class ReviewsPage extends StatefulWidget {
   const ReviewsPage({super.key});
@@ -31,28 +32,33 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Review Lapangan'),
-        backgroundColor: Colors.indigo,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
-      // drawer: const LeftDrawer(),
+      drawer: const LeftDrawer(),
       body: FutureBuilder(
         future: fetchReviews(request),
         builder: (context, AsyncSnapshot snapshot) {
           if (snapshot.data == null) {
             return const Center(child: CircularProgressIndicator());
           } else {
-            if (!snapshot.hasData) {
-              return const Column(
-                children: [
-                  Text(
-                    "Belum ada review.",
-                    style: TextStyle(color: Color(0xff59A5D8), fontSize: 20),
-                  ),
-                  SizedBox(height: 8),
-                ],
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Belum ada review.",
+                      style: TextStyle(color: Colors.grey, fontSize: 20),
+                    ),
+                    SizedBox(height: 8),
+                  ],
+                ),
               );
             } else {
               return ListView.builder(
@@ -73,7 +79,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
               MaterialPageRoute(builder: (context) => const ReviewFormPage())
           );
         },
-        backgroundColor: Colors.indigo,
+        backgroundColor: primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
