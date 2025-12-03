@@ -1,6 +1,7 @@
 import 'package:lapang/screens/home/home_page.dart';
 import 'package:lapang/screens/auth/register.dart';
 import 'package:flutter/material.dart';
+import 'package:lapang/models/custom_user.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
@@ -97,45 +98,80 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 24.0),
                   ElevatedButton(
                     onPressed: () async {
-                      String username = _usernameController.text;
+                      String username = _usernameController.text.trim();
                       String password = _passwordController.text;
 
-                      final response = await request.login(
-                        "http://localhost:8000/api/auth/login/",
-                        {'username': username, 'password': password},
-                      );
+                      try {
+                        // pbp_django_auth's request.login posts credentials and sets cookies
+                        final response = await request.login(
+                          "http://localhost:8000/api/auth/login/",
+                          {'username': username, 'password': password},
+                        );
 
-                      if (request.loggedIn) {
-                        String message = response['message'];
-                        String uname = response['username'];
-                        if (context.mounted) {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomePage(),
-                            ),
+                        // request.loggedIn is maintained by CookieRequest — but also check server response
+                        final bool serverOk =
+                            response != null &&
+                            (response['status'] == true ||
+                                response['status'] == 'true');
+
+                        if (serverOk && request.loggedIn) {
+                          // parse returned flat profile into CustomUser
+                          final customUser = CustomUser.fromJson(
+                            Map<String, dynamic>.from(response),
                           );
-                          ScaffoldMessenger.of(context)
-                            ..hideCurrentSnackBar()
-                            ..showSnackBar(
-                              SnackBar(
-                                content: Text("$message Welcome, $uname."),
+
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomePage(),
                               ),
                             );
+
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "${response['message'] ?? 'Login successful'} Welcome, ${customUser.username ?? username}.",
+                                  ),
+                                ),
+                              );
+                          }
+                        } else {
+                          // show server-provided message or fallback
+                          final msg =
+                              (response != null && response['message'] != null)
+                              ? response['message'].toString()
+                              : 'Login failed. Please check credentials.';
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Login Failed'),
+                                content: Text(msg),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('OK'),
+                                    onPressed: () => Navigator.pop(context),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                         }
-                      } else {
+                      } catch (e) {
+                        // network or unexpected error
                         if (context.mounted) {
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('Login Failed'),
-                              content: Text(response['message']),
+                              title: const Text('Error'),
+                              content: Text('Login error: $e'),
                               actions: [
                                 TextButton(
                                   child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
+                                  onPressed: () => Navigator.pop(context),
                                 ),
                               ],
                             ),
