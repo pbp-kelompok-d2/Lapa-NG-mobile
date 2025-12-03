@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lapang/screens/equipment/equipment_entry_list.dart';
 import 'package:lapang/screens/home/home_page.dart';
 // TODO: Import halaman teman-teman lain di sini
 // import 'package:lapang/screens/booking/booking_page.dart';
@@ -53,6 +54,17 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
+          ListTile(
+            leading: const Icon(Icons.send_to_mobile_sharp),
+            title: const Text('Equipment'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EquipmentEntryListPage()),
+              );
+            },
+          ),
+          
           // === TEMPLATE  (TINGGAL COPAS) ===
           /* ListTile(
             leading: const Icon(Icons.shopping_basket), // Ganti Icon
