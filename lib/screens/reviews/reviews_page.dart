@@ -15,10 +15,11 @@ class ReviewsPage extends StatefulWidget {
 
 class _ReviewsPageState extends State<ReviewsPage> {
   Future<List<Review>> fetchReviews(CookieRequest request) async {
+    // Sesuaikan URL. Untuk Chrome pakai localhost
     final response = await request.get('http://127.0.0.1:8000/reviews/get-reviews/');
 
+    // Decode data. Karena backend kamu kirim list of dicts, langsung map saja.
     var data = response;
-
     List<Review> listReview = [];
     for (var d in data) {
       if (d != null) {
@@ -43,40 +44,40 @@ class _ReviewsPageState extends State<ReviewsPage> {
       body: FutureBuilder(
         future: fetchReviews(request),
         builder: (context, AsyncSnapshot snapshot) {
-          if (snapshot.data == null) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text(
+                "Belum ada review.",
+                style: TextStyle(color: Colors.grey, fontSize: 20),
+              ),
+            );
           } else {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Belum ada review.",
-                      style: TextStyle(color: Colors.grey, fontSize: 20),
-                    ),
-                    SizedBox(height: 8),
-                  ],
-                ),
-              );
-            } else {
-              return ListView.builder(
-                itemCount: snapshot.data!.length,
-                itemBuilder: (_, index) {
-                  return ReviewCard(review: snapshot.data![index]);
-                },
-              );
-            }
+            return ListView.builder(
+              itemCount: snapshot.data!.length,
+              itemBuilder: (_, index) {
+                // Pass data review ke widget Card
+                return ReviewCard(review: snapshot.data![index]);
+              },
+            );
           }
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke form tambah review
-          Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ReviewFormPage())
+        onPressed: () async {
+          // PENTING: Tunggu hasil dari form page (await)
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ReviewFormPage()),
           );
+
+          // Jika result == true (berhasil simpan), refresh halaman
+          if (result == true) {
+            setState(() {});
+          }
         },
         backgroundColor: primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
