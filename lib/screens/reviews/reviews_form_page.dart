@@ -106,27 +106,40 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                 ),
               ),
 
-              // 3. Input Rating (Slider 1-5)
+              // 3. Input Rating (clickable 1-5)
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Rating: $_rating Bintang",
-                        style: const TextStyle(fontSize: 16)),
-                    Slider(
-                      value: _rating.toDouble(),
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      label: _rating.toString(),
-                      activeColor: Colors.amber,
-                      onChanged: (double value) {
-                        setState(() {
-                          _rating = value.toInt();
-                        });
-                      },
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center, // Bintang di tengah
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _rating = index + 1;
+                            });
+                          },
+                          icon: Icon(
+                            index < _rating ? Icons.star : Icons.star_border,
+                            color: Colors.amber,
+                            size: 40.0, // Ukuran bintang lebih besar
+                          ),
+                        );
+                      }),
+                    ),
+                    if (_rating == 0)
+                      const Center(
+                        child: Text(
+                          "Silakan beri bintang",
+                          style: TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      )
                   ],
                 ),
               ),
