@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lapang/screens/home/home_page.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:lapang/screens/auth/login.dart';
 // TODO: Import halaman teman-teman lain di sini
 // import 'package:lapang/screens/booking/booking_page.dart';
 import 'package:lapang/screens/reviews/reviews_page.dart';
@@ -9,6 +12,7 @@ class LeftDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Drawer(
       child: ListView(
         children: [
@@ -47,10 +51,39 @@ class LeftDrawer extends StatelessWidget {
             // Bagian redirection ke MyHomePage
             onTap: () {
               Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const HomePage(),
-                  ));
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+            },
+          ),
+
+          // === LOGOUT ===
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            onTap: () async {
+              final response = await request.logout(
+                "http://localhost:8000/api/auth/logout/",
+              );
+              String message = response["message"];
+              if (context.mounted) {
+                if (response['status']) {
+                    String uname = response["username"];
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("$message See you again, $uname."),
+                    ));
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginPage()),
+                    );
+                } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(message),
+                        ),
+                    );
+                }
+              }
             },
           ),
 
