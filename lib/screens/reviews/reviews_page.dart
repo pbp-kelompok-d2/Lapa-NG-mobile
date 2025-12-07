@@ -31,7 +31,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(

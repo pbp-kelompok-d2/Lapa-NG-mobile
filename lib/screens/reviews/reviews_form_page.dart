@@ -208,6 +208,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                     ),
                     onPressed: () async {
                       if (_formKey.currentState!.validate()) {
+                        // Validasi Rating
+                        if (_rating == 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Harap beri rating minimal 1 bintang!")),
+                          );
+                          return;
+                        }
+
                         // Kirim data ke Django
                         final response = await request.postJson(
                           "http://127.0.0.1:8000/reviews/add-review/",

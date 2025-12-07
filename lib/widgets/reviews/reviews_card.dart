@@ -100,8 +100,8 @@ class ReviewCard extends StatelessWidget {
               ),
             ],
 
-            // Komentar (Optional - Jika backend sudah mengirimnya)
-            if (review.comment != null && review.comment!.isNotEmpty) ...[
+            // Komentar
+            if (review.comment.isNotEmpty) ...[
               const SizedBox(height: 12),
               Text(
                 review.comment!,
