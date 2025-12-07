@@ -109,7 +109,7 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Feed berhasil dibuat!')),
                       );
-                      Navigator.pop(context); // balik ke list
+                      Navigator.pop(context, true); // balik ke list
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

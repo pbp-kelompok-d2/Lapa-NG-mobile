@@ -5,6 +5,7 @@ import 'package:lapang/screens/feeds/my_feeds_page.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:lapang/screens/home/home_page.dart';
+import 'package:lapang/screens/auth/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -28,12 +29,13 @@ class MyApp extends StatelessWidget {
             primarySwatch: Colors.green,
           ).copyWith(secondary: Colors.green[400]),
         ),
-        home: const HomePage(),
+        home: const LoginPage(),
         routes: {
           '/feeds': (context) => const FeedsPage(),
           '/feeds/my': (context) => const MyFeedsPage(),
           '/feeds/create': (context) => const CreateFeedPage(),
         },
+
       ),
     );
   }
