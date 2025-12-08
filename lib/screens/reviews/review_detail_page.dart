@@ -3,6 +3,8 @@ import 'package:lapang/models/reviews.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'dart:convert';
+import 'package:lapang/screens/reviews/reviews_form_page.dart';
+
 
 class ReviewDetailPage extends StatelessWidget {
   final Review review;
@@ -288,40 +290,70 @@ class ReviewDetailPage extends StatelessWidget {
       ),
 
       floatingActionButton: review.canModify
-          ? FloatingActionButton.extended(
-        onPressed: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text("Hapus Ulasan"),
-              content: const Text("Apakah Anda yakin ingin menghapus ulasan ini?"),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
-                TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Hapus", style: TextStyle(color: Colors.red))),
-              ],
-            ),
-          );
-
-          if (confirm == true) {
-            final response = await request.postJson(
-              "http://localhost:8000/reviews/delete-review-ajax/${review.pk}/",
-              jsonEncode({}),
-            );
-
-            if (context.mounted) {
-              if (response['status'] == 'success') {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Berhasil dihapus!")));
+          ? Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // TOMBOL EDIT
+          FloatingActionButton.extended(
+            heroTag: "btnEdit",
+            onPressed: () async {
+              // Navigasi ke Form dengan membawa data review
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ReviewFormPage(review: review),
+                ),
+              );
+              if (context.mounted) {
                 Navigator.pop(context, true);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${response['message']}")));
               }
-            }
-          }
-        },
-        backgroundColor: Colors.redAccent,
-        elevation: 4,
-        icon: const Icon(Icons.delete_forever_rounded, color: Colors.white),
-        label: const Text("Hapus Review", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            },
+            label: const Text("Edit", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.edit, color: Colors.white),
+            backgroundColor: Colors.amber,
+            elevation: 4,
+          ),
+
+          const SizedBox(width: 16),
+
+          // TOMBOL HAPUS
+          FloatingActionButton.extended(
+            heroTag: "btnDelete",
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text("Hapus Ulasan"),
+                  content: const Text("Apakah Anda yakin ingin menghapus ulasan ini?"),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
+                    TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Hapus", style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                final response = await request.postJson(
+                  "http://localhost:8000/reviews/delete-review-ajax/${review.pk}/",
+                  jsonEncode({}),
+                );
+
+                if (context.mounted) {
+                  if (response['status'] == 'success') {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Berhasil dihapus!")));
+                    Navigator.pop(context, true);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: ${response['message']}")));
+                  }
+                }
+              }
+            },
+            label: const Text("Hapus", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            icon: const Icon(Icons.delete_outline, color: Colors.white),
+            backgroundColor: Colors.redAccent,
+            elevation: 4,
+          ),
+        ],
       )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
