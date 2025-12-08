@@ -8,16 +8,18 @@ class VenueCard extends StatelessWidget {
   const VenueCard({super.key, required this.venue});
 
   // Helper untuk fix URL gambar di Android Emulator
-  String _fixImageUrl(String url) {
-    if (url.contains('localhost')) return url.replaceAll('localhost', '10.0.2.2');
-    if (url.contains('127.0.0.1')) return url.replaceAll('127.0.0.1', '10.0.2.2');
-    return url;
-  }
+  // String _fixImageUrl(String url) {
+  //   if (url.contains('localhost')) return url.replaceAll('localhost', '10.0.2.2');
+  //   if (url.contains('127.0.0.1')) return url.replaceAll('127.0.0.1', '10.0.2.2');
+  //   return url;
+  // }
+
+
 
   @override
   Widget build(BuildContext context) {
     final fields = venue.fields;
-    final imageUrl = _fixImageUrl(fields.imageUrl);
+    final imageUrl ='http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
