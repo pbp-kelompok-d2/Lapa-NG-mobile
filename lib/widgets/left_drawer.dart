@@ -6,6 +6,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:lapang/screens/auth/login.dart';
 // TODO: Import halaman teman-teman lain di sini
 // import 'package:lapang/screens/booking/booking_page.dart';
+import 'package:lapang/screens/reviews/reviews_page.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -87,6 +88,22 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
+          // ===  REVIEW ===
+          ListTile(
+            leading: const Icon(Icons.reviews),
+            title: const Text('Review Lapangan'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReviewsPage()),
+              );
+            },
+          ),
+
+          // === TEMPLATE  (TINGGAL COPAS) ===
+          /* ListTile(
+            leading: const Icon(Icons.shopping_basket), // Ganti Icon
+            title: const Text('Booking Lapangan'),      // Ganti Nama Fitur
           // === Navigasi Feeds ===
           ListTile(
             leading: const Icon(Icons.dynamic_feed),
