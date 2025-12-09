@@ -254,6 +254,7 @@ class FeedCard extends StatelessWidget {
     final dateText = formatDate(feed.createdAt);
 
     final borderRadius = BorderRadius.circular(18);
+    final bool hasThumbnail = feed.thumbnail.trim().isNotEmpty;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -326,31 +327,23 @@ class FeedCard extends StatelessWidget {
               ),
 
               // ====== GAMBAR ======
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: feed.thumbnail.isNotEmpty
-                    ? Image.network(
-                        'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: Colors.grey[300],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            size: 48,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[300],
-                        child: Icon(
-                          Icons.image,
-                          size: 48,
-                          color: Colors.grey[600],
-                        ),
+              if (hasThumbnail)
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Image.network(
+                    'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[300],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 48,
+                        color: Colors.grey[600],
                       ),
-              ),
-
+                    ),
+                  ),
+                ),
+                
               // ====== INFO BAR ======
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
