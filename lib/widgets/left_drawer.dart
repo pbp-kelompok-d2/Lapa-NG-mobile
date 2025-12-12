@@ -100,10 +100,6 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
-          // === TEMPLATE  (TINGGAL COPAS) ===
-          /* ListTile(
-            leading: const Icon(Icons.shopping_basket), // Ganti Icon
-            title: const Text('Booking Lapangan'),      // Ganti Nama Fitur
           // === Navigasi Feeds ===
           ListTile(
             leading: const Icon(Icons.dynamic_feed),
@@ -116,6 +112,11 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
+          // === TEMPLATE  (TINGGAL COPAS) ===
+          /* ListTile(
+            leading: const Icon(Icons.shopping_basket), // Ganti Icon
+            title: const Text('Booking Lapangan'),      // Ganti Nama Fitur
+
           // Contoh Integrasi Fitur Lain (Misal Review)
           /* ListTile(
             leading: const Icon(Icons.reviews),
@@ -125,7 +126,7 @@ class LeftDrawer extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => const ReviewPage()),
               );
-            },
+            },*/
           ),
           */
         ],
