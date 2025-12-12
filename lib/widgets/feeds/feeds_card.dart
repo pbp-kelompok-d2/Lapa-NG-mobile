@@ -328,22 +328,25 @@ class FeedCard extends StatelessWidget {
 
               // ====== GAMBAR ======
               if (hasThumbnail)
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Image.network(
-                    'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[300],
-                      child: Icon(
-                        Icons.image_not_supported,
-                        size: 48,
-                        color: Colors.grey[600],
+                Hero(
+                  tag: 'feed-image-${feed.id}',
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Image.network(
+                      'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[300],
+                        child: Icon(
+                          Icons.image_not_supported,
+                          size: 48,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ),
                   ),
                 ),
-                
+
               // ====== INFO BAR ======
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
