@@ -13,11 +13,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // State untuk Search & Filter
   String _searchQuery = "";
   String? _selectedCategory;
 
-  // Daftar kategori (sesuai dengan models.py di Django)
   final List<String> _categories = [
     'Soccer',
     'Futsal',
@@ -30,16 +28,15 @@ class _HomePageState extends State<HomePage> {
   ];
 
   String _getEndpointUrl() {
+    // Android Emulator: 10.0.2.2
+    // Web/Chrome: 127.0.0.1
     const String baseUrl = "http://127.0.0.1:8000";
 
     if (_searchQuery.isNotEmpty) {
-      // Panggil API Search
       return "$baseUrl/api/venues/search/?q=$_searchQuery";
     } else if (_selectedCategory != null) {
-      // Panggil API Filter
       return "$baseUrl/api/venues/filter/?sport=$_selectedCategory";
     } else {
-      // Panggil API List Semua Venue
       return "$baseUrl/api/venues/";
     }
   }
@@ -56,6 +53,17 @@ class _HomePageState extends State<HomePage> {
         listVenue.add(Venue.fromJson(d));
       }
     }
+
+    // === LOGIC SORTING (Featured First) ===
+    // Mengurutkan list: Venue yang isFeatured=true akan ditaruh di paling atas.
+    // Jika sama-sama featured atau tidak, urutkan berdasarkan nama.
+    listVenue.sort((a, b) {
+      if (a.fields.isFeatured == b.fields.isFeatured) {
+        return a.fields.name.compareTo(b.fields.name);
+      }
+      return a.fields.isFeatured ? -1 : 1;
+    });
+
     return listVenue;
   }
 
@@ -72,7 +80,7 @@ class _HomePageState extends State<HomePage> {
       drawer: const LeftDrawer(),
       body: Column(
         children: [
-          // search bar
+          // === SEARCH BAR ===
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
@@ -85,7 +93,6 @@ class _HomePageState extends State<HomePage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               ),
               onChanged: (value) {
-                // Set state query, reset category biar gak bentrok
                 setState(() {
                   _searchQuery = value;
                   _selectedCategory = null;
@@ -94,13 +101,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // category filter (horizontal scroll)
+          // === FILTER CHIPS ===
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
               children: [
-                // Tombol "All" untuk reset filter
                 Padding(
                   padding: const EdgeInsets.only(right: 8.0),
                   child: ChoiceChip(
@@ -109,12 +115,11 @@ class _HomePageState extends State<HomePage> {
                     onSelected: (bool selected) {
                       setState(() {
                         _selectedCategory = null;
-                        _searchQuery = ""; // Reset search juga
+                        _searchQuery = "";
                       });
                     },
                   ),
                 ),
-                // Generate Chips dari List Kategori
                 ..._categories.map((category) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
@@ -123,9 +128,8 @@ class _HomePageState extends State<HomePage> {
                       selected: _selectedCategory == category,
                       onSelected: (bool selected) {
                         setState(() {
-                          // Jika diklik lagi, unselect (jadi null). Jika belum, set category.
                           _selectedCategory = selected ? category : null;
-                          _searchQuery = ""; // Reset search saat filter aktif
+                          _searchQuery = "";
                         });
                       },
                     ),
@@ -137,7 +141,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 10),
 
-          // List Venue
+          // === RESPONSIVE GRID LIST ===
           Expanded(
             child: FutureBuilder(
               future: fetchVenues(request),
@@ -148,23 +152,39 @@ class _HomePageState extends State<HomePage> {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 } else {
                   if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.search_off, size: 60, color: Colors.grey),
-                          SizedBox(height: 16),
-                          Text(
-                            'Tidak ada venue yang ditemukan.',
-                            style: TextStyle(fontSize: 16, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    );
+                    return const Center(child: Text('Tidak ada venue yang ditemukan.'));
                   } else {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.length,
-                      itemBuilder: (_, index) => VenueCard(venue: snapshot.data![index]),
+
+                    // LayoutBuilder digunakan untuk mendapatkan lebar layar saat ini
+                    return LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Logic Responsif:
+                        // Default (Mobile kecil): 2 kolom
+                        int crossAxisCount = 2;
+
+                        // Tablet / Layar sedang (> 600px): 4 kolom
+                        if (constraints.maxWidth > 600 && constraints.maxWidth <= 1200) {
+                          crossAxisCount = 4;
+                        }
+                        // Desktop / Layar Besar (> 1200px): 7 kolom
+                        else if (constraints.maxWidth > 1200) {
+                          crossAxisCount = 7;
+                        }
+
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(16),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            // childAspectRatio mengatur perbandingan lebar:tinggi kartu.
+                            // Angka 0.7 - 0.8 biasanya pas untuk kartu vertical.
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: snapshot.data!.length,
+                          itemBuilder: (_, index) => VenueCard(venue: snapshot.data![index]),
+                        );
+                      },
                     );
                   }
                 }
