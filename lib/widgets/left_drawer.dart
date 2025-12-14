@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lapang/screens/feeds/feeds_page.dart';
 import 'package:lapang/screens/home/home_page.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:lapang/screens/auth/login.dart';
 // TODO: Import halaman teman-teman lain di sini
 // import 'package:lapang/screens/booking/booking_page.dart';
+import 'package:lapang/screens/reviews/reviews_page.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -86,19 +88,34 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
+          // ===  REVIEW ===
+          ListTile(
+            leading: const Icon(Icons.reviews),
+            title: const Text('Review Lapangan'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ReviewsPage()),
+              );
+            },
+          ),
+
+          // === Navigasi Feeds ===
+          ListTile(
+            leading: const Icon(Icons.dynamic_feed),
+            title: const Text('Feeds'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FeedsPage()),
+              );
+            },
+          ),
+
           // === TEMPLATE  (TINGGAL COPAS) ===
           /* ListTile(
             leading: const Icon(Icons.shopping_basket), // Ganti Icon
             title: const Text('Booking Lapangan'),      // Ganti Nama Fitur
-            onTap: () {
-              // Route menu ke halaman booking
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const BookingPage()), // Ganti Page
-              );
-            },
-          ),
-          */
 
           // Contoh Integrasi Fitur Lain (Misal Review)
           /* ListTile(
@@ -109,7 +126,7 @@ class LeftDrawer extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => const ReviewPage()),
               );
-            },
+            },*/
           ),
           */
         ],
@@ -117,3 +134,4 @@ class LeftDrawer extends StatelessWidget {
     );
   }
 }
+
