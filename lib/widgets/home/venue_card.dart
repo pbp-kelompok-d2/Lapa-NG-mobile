@@ -7,22 +7,19 @@ class VenueCard extends StatelessWidget {
 
   const VenueCard({super.key, required this.venue});
 
-  // Helper untuk fix URL gambar di Android Emulator
-  // String _fixImageUrl(String url) {
-  //   if (url.contains('localhost')) return url.replaceAll('localhost', '10.0.2.2');
-  //   if (url.contains('127.0.0.1')) return url.replaceAll('127.0.0.1', '10.0.2.2');
-  //   return url;
-  // }
-
-
-
   @override
   Widget build(BuildContext context) {
     final fields = venue.fields;
+
+    // === PERBAIKAN 1: URL UNTUK EMULATOR ===
+    // Gunakan 10.0.2.2 untuk Android Emulator.
+    // Jika fields.imageUrl sudah berisi http://127.0.0.1..., kita encode dan kirim ke proxy.
+    // Pastikan base URL proxy juga menggunakan 10.0.2.2.
     final imageUrl ='http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      // Margin di-set zero biar GridView yang atur jarak
+      margin: EdgeInsets.zero,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias,
@@ -38,49 +35,57 @@ class VenueCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // === GAMBAR ===
-            Stack(
-              children: [
-                Container(
-                  height: 180,
-                  width: double.infinity,
-                  color: Colors.grey[300],
-                  child: imageUrl.isNotEmpty
-                      ? Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, error, stackTrace) =>
-                    const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey)),
-                  )
-                      : const Center(child: Icon(Icons.sports_soccer, size: 50, color: Colors.grey)),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      fields.category.toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+            // === PERBAIKAN 2: LAYOUT RESPONSIF (AspectRatio) ===
+            // Mengganti Container height: 180 agar gambar menyesuaikan lebar kartu
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Stack(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: Colors.grey[300],
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      // === PERBAIKAN 3: OPTIMASI MEMORI ===
+                      cacheWidth: 600,
+                      errorBuilder: (ctx, error, stackTrace) =>
+                      const Center(child: Icon(Icons.broken_image, size: 50, color: Colors.grey)),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(child: CircularProgressIndicator());
+                      },
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        fields.category.toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             // === INFO ===
+            // Menggunakan Flexible agar teks tidak overflow
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     fields.name,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -92,28 +97,31 @@ class VenueCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           fields.address,
-                          style: const TextStyle(color: Colors.grey),
+                          style: const TextStyle(color: Colors.grey, fontSize: 12),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        fields.price != null ? "Rp ${fields.price}" : "Hubungi Kami",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.green,
-                          fontWeight: FontWeight.w800,
+                      Flexible(
+                        child: Text(
+                          fields.price != null ? "Rp ${fields.price}" : "Hubungi Kami",
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.green,
+                            fontWeight: FontWeight.w800,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Text(
                         "/ jam",
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 10, color: Colors.grey),
                       ),
                     ],
                   ),

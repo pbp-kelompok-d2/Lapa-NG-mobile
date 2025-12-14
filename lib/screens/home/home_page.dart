@@ -155,20 +155,22 @@ class _HomePageState extends State<HomePage> {
                     return const Center(child: Text('Tidak ada venue yang ditemukan.'));
                   } else {
 
-                    // LayoutBuilder digunakan untuk mendapatkan lebar layar saat ini
                     return LayoutBuilder(
                       builder: (context, constraints) {
-                        // Logic Responsif:
-                        // Default (Mobile kecil): 2 kolom
                         int crossAxisCount = 2;
+                        // Ubah ratio jadi sedikit lebih 'jangkung' (0.7) agar teks muat
+                        double childAspectRatio = 0.75;
 
-                        // Tablet / Layar sedang (> 600px): 4 kolom
-                        if (constraints.maxWidth > 600 && constraints.maxWidth <= 1200) {
-                          crossAxisCount = 4;
-                        }
-                        // Desktop / Layar Besar (> 1200px): 7 kolom
-                        else if (constraints.maxWidth > 1200) {
+                        if (constraints.maxWidth > 1200) {
                           crossAxisCount = 7;
+                          childAspectRatio = 0.65; // Desktop 7 kolom butuh kartu lebih tinggi
+                        } else if (constraints.maxWidth > 600) {
+                          crossAxisCount = 4;
+                          childAspectRatio = 0.7; // Tablet
+                        } else {
+                          // Mobile
+                          crossAxisCount = 2;
+                          childAspectRatio = 0.75;
                         }
 
                         return GridView.builder(
@@ -177,9 +179,7 @@ class _HomePageState extends State<HomePage> {
                             crossAxisCount: crossAxisCount,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            // childAspectRatio mengatur perbandingan lebar:tinggi kartu.
-                            // Angka 0.7 - 0.8 biasanya pas untuk kartu vertical.
-                            childAspectRatio: 0.75,
+                            childAspectRatio: childAspectRatio,
                           ),
                           itemCount: snapshot.data!.length,
                           itemBuilder: (_, index) => VenueCard(venue: snapshot.data![index]),
