@@ -1,194 +1,153 @@
 import 'package:flutter/material.dart';
-import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:provider/provider.dart';
-import 'package:lapang/models/venue.dart';
-import 'package:lapang/widgets/home/venue_card.dart';
+import 'package:lapang/screens/home/venues_page.dart';
 import 'package:lapang/widgets/left_drawer.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  String _searchQuery = "";
-  String? _selectedCategory;
-
-  final List<String> _categories = [
-    'Soccer',
-    'Futsal',
-    'Badminton',
-    'Basketball',
-    'Tennis',
-    'Volleyball',
-    'Multi-Sport',
-    'Other'
-  ];
-
-  String _getEndpointUrl() {
-    // Android Emulator: 10.0.2.2
-    // Web/Chrome: 127.0.0.1
-    const String baseUrl = "http://127.0.0.1:8000";
-
-    if (_searchQuery.isNotEmpty) {
-      return "$baseUrl/api/venues/search/?q=$_searchQuery";
-    } else if (_selectedCategory != null) {
-      return "$baseUrl/api/venues/filter/?sport=$_selectedCategory";
-    } else {
-      return "$baseUrl/api/venues/";
-    }
-  }
-
-  Future<List<Venue>> fetchVenues(CookieRequest request) async {
-    final String url = _getEndpointUrl();
-    final response = await request.get(url);
-
-    var data = response;
-
-    List<Venue> listVenue = [];
-    for (var d in data) {
-      if (d != null) {
-        listVenue.add(Venue.fromJson(d));
-      }
-    }
-
-    // === LOGIC SORTING (Featured First) ===
-    // Mengurutkan list: Venue yang isFeatured=true akan ditaruh di paling atas.
-    // Jika sama-sama featured atau tidak, urutkan berdasarkan nama.
-    listVenue.sort((a, b) {
-      if (a.fields.isFeatured == b.fields.isFeatured) {
-        return a.fields.name.compareTo(b.fields.name);
-      }
-      return a.fields.isFeatured ? -1 : 1;
-    });
-
-    return listVenue;
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final request = context.watch<CookieRequest>();
-
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Lapa-NG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       drawer: const LeftDrawer(),
-      body: Column(
+      body: Stack(
         children: [
-          // === SEARCH BAR ===
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Cari lapangan...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30.0),
+          // 1. Full Screen Background
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?q=80&w=2070&auto=format&fit=crop', // Sports Arena BG
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
+            ),
+          ),
+
+          // 2. Dark Overlay
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.3),
+                    Colors.black.withOpacity(0.6),
+                    Colors.black.withOpacity(0.9),
+                  ],
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                  _selectedCategory = null;
-                });
-              },
             ),
           ),
 
-          // === FILTER CHIPS ===
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: const Text("All"),
-                    selected: _selectedCategory == null && _searchQuery.isEmpty,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        _selectedCategory = null;
-                        _searchQuery = "";
-                      });
-                    },
-                  ),
-                ),
-                ..._categories.map((category) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: ChoiceChip(
-                      label: Text(category),
-                      selected: _selectedCategory == category,
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedCategory = selected ? category : null;
-                          _searchQuery = "";
-                        });
-                      },
+          // 3. Hero Content
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Animated/Hero Logo (Local Asset)
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white24, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.4),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        )
+                      ],
                     ),
-                  );
-                }),
-              ],
-            ),
-          ),
+                    padding: const EdgeInsets.all(20),
+                    child: Image.asset(
+                      'assets/images/logo.png', // Pastikan logo ada di pubspec.yaml
+                      errorBuilder: (c, o, s) => const Icon(Icons.sports_soccer, size: 60, color: Colors.white),
+                    ),
+                  ),
 
-          const SizedBox(height: 10),
+                  const SizedBox(height: 32),
 
-          // === RESPONSIVE GRID LIST ===
-          Expanded(
-            child: FutureBuilder(
-              future: fetchVenues(request),
-              builder: (context, AsyncSnapshot snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Tidak ada venue yang ditemukan.'));
-                  } else {
+                  // Title
+                  const Text(
+                    "Welcome to Lapa-NG",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
+                      shadows: [
+                        Shadow(color: Colors.black54, offset: Offset(0, 4), blurRadius: 10),
+                      ],
+                    ),
+                  ),
 
-                    return LayoutBuilder(
-                      builder: (context, constraints) {
-                        int crossAxisCount = 2;
-                        // Ubah ratio jadi sedikit lebih 'jangkung' (0.7) agar teks muat
-                        double childAspectRatio = 0.75;
+                  const SizedBox(height: 12),
 
-                        if (constraints.maxWidth > 1200) {
-                          crossAxisCount = 7;
-                          childAspectRatio = 0.65; // Desktop 7 kolom butuh kartu lebih tinggi
-                        } else if (constraints.maxWidth > 600) {
-                          crossAxisCount = 4;
-                          childAspectRatio = 0.7; // Tablet
-                        } else {
-                          // Mobile
-                          crossAxisCount = 2;
-                          childAspectRatio = 0.75;
-                        }
+                  // Subtitle
+                  const Text(
+                    "Find and book the best sports venues\nin your area instantly.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white70,
+                      height: 1.5,
+                    ),
+                  ),
 
-                        return GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: childAspectRatio,
+                  const SizedBox(height: 48),
+
+                  // Call to Action Button
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const VenuesPage()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFE5B20), // Signature Orange
+                          foregroundColor: Colors.white,
+                          elevation: 8,
+                          shadowColor: Colors.orange.withOpacity(0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
                           ),
-                          itemCount: snapshot.data!.length,
-                          itemBuilder: (_, index) => VenueCard(venue: snapshot.data![index]),
-                        );
-                      },
-                    );
-                  }
-                }
-              },
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Explore Venues",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward_rounded, size: 24),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                ],
+              ),
             ),
           ),
         ],
