@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lapang/screens/feeds/feeds_page.dart';
 import 'package:lapang/screens/home/home_page.dart';
-import 'package:provider/provider.dart';
-import 'package:pbp_django_auth/pbp_django_auth.dart';
-import 'package:lapang/screens/auth/login.dart';
-// TODO: Import halaman teman-teman lain di sini
-// import 'package:lapang/screens/booking/booking_page.dart';
+import 'package:lapang/screens/home/venues_page.dart';
+import 'package:lapang/screens/feeds/feeds_page.dart';
 import 'package:lapang/screens/reviews/reviews_page.dart';
+import 'package:lapang/screens/auth/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -14,42 +13,22 @@ class LeftDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+
     return Drawer(
       child: ListView(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.green, // Sesuaikan warna tema Lapa-NG
+          const UserAccountsDrawerHeader(
+            accountName: Text("Lapa-NG User"),
+            accountEmail: Text("user@lapa-ng.com"),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Colors.green, size: 40),
             ),
-            child: Column(
-              children: [
-                Text(
-                  'Lapa-NG',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                Padding(padding: EdgeInsets.all(10)),
-                Text(
-                  "Cari dan Booking Lapangan Favoritmu!",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.white,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
+            decoration: BoxDecoration(color: Colors.green),
           ),
-          // ===  NAVIGASI MAIN/HOME ===
           ListTile(
             leading: const Icon(Icons.home_outlined),
-            title: const Text('Halaman Utama'),
-            // Bagian redirection ke MyHomePage
+            title: const Text('Home'),
             onTap: () {
               Navigator.pushReplacement(
                 context,
@@ -57,81 +36,75 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ),
-
-          // === LOGOUT ===
           ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Logout'),
-            onTap: () async {
-              final response = await request.logout(
-                "http://localhost:8000/api/auth/logout/",
-              );
-              String message = response["message"];
-              if (context.mounted) {
-                if (response['status']) {
-                    String uname = response["username"];
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("$message See you again, $uname."),
-                    ));
-                    Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginPage()),
-                    );
-                } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(message),
-                        ),
-                    );
-                }
-              }
-            },
-          ),
-
-          // ===  REVIEW ===
-          ListTile(
-            leading: const Icon(Icons.reviews),
-            title: const Text('Review Lapangan'),
+            leading: const Icon(Icons.stadium_outlined),
+            title: const Text('Venues'),
             onTap: () {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const ReviewsPage()),
+                MaterialPageRoute(builder: (context) => const VenuesPage()),
               );
             },
           ),
-
-          // === Navigasi Feeds ===
           ListTile(
-            leading: const Icon(Icons.dynamic_feed),
+            leading: const Icon(Icons.forum_outlined),
             title: const Text('Feeds'),
             onTap: () {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const FeedsPage()),
               );
             },
           ),
-
-          // === TEMPLATE  (TINGGAL COPAS) ===
-          /* ListTile(
-            leading: const Icon(Icons.shopping_basket), // Ganti Icon
-            title: const Text('Booking Lapangan'),      // Ganti Nama Fitur
-
-          // Contoh Integrasi Fitur Lain (Misal Review)
-          /* ListTile(
-            leading: const Icon(Icons.reviews),
-            title: const Text('Lihat Review'),
+          ListTile(
+            leading: const Icon(Icons.reviews_outlined),
+            title: const Text('Reviews'),
             onTap: () {
-              Navigator.push(
+              Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const ReviewPage()),
+                MaterialPageRoute(builder: (context) => const ReviewsPage()),
               );
-            },*/
+            },
           ),
-          */
+          const Divider(),
+          if (request.loggedIn)
+            ListTile(
+              leading: const Icon(Icons.logout, color: Colors.red),
+              title: const Text('Logout', style: TextStyle(color: Colors.red)),
+              onTap: () async {
+                final response = await request.logout("http://127.0.0.1:8000/auth/logout/");
+                if (context.mounted) {
+                  String message = response["message"];
+                  if (response['status']) {
+                    String uname = response["username"];
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("$message Sampai jumpa, $uname.")),
+                    );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(message)),
+                    );
+                  }
+                }
+              },
+            )
+          else
+            ListTile(
+              leading: const Icon(Icons.login, color: Colors.green),
+              title: const Text('Login', style: TextStyle(color: Colors.green)),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
         ],
       ),
     );
   }
 }
-
