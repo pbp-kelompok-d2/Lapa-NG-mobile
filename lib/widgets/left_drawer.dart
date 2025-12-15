@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:lapang/screens/auth/login.dart';
 // TODO: Import halaman teman-teman lain di sini
-// import 'package:lapang/screens/booking/booking_page.dart';
+import 'package:lapang/screens/booking/booking_list_screen.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -95,6 +95,20 @@ class LeftDrawer extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const FeedsPage()),
+              );
+            },
+          ),
+
+          // === Booking List ===
+          ListTile(
+            leading: const Icon(Icons.calendar_month),
+            title: const Text('Booking Saya'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookingListScreen(),
+                ),
               );
             },
           ),
