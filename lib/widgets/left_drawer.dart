@@ -5,6 +5,7 @@ import 'package:lapang/screens/feeds/feeds_page.dart';
 import 'package:lapang/screens/reviews/reviews_page.dart';
 import 'package:lapang/screens/auth/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:lapang/screens/user/dashboard.dart';
 import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
@@ -66,13 +67,28 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ),
+          if (request.loggedIn)
+            ListTile(
+              leading: const Icon(Icons.account_circle),
+              title: const Text('Dashboard'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DashboardPage(),
+                  ),
+                );
+              },
+            ),
           const Divider(),
           if (request.loggedIn)
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Logout', style: TextStyle(color: Colors.red)),
               onTap: () async {
-                final response = await request.logout("http://127.0.0.1:8000/auth/logout/");
+                final response = await request.logout(
+                  "http://127.0.0.1:8000/auth/logout/",
+                );
                 if (context.mounted) {
                   String message = response["message"];
                   if (response['status']) {
@@ -82,12 +98,14 @@ class LeftDrawer extends StatelessWidget {
                     );
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const LoginPage(),
+                      ),
                     );
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text(message)));
                   }
                 }
               },
