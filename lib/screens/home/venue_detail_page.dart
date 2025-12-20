@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:lapang/models/venue.dart';
+import 'package:lapang/models/booking.dart';
+import 'package:lapang/screens/booking/booking_list_screen.dart';
+import 'package:lapang/screens/booking/booking_form.dart';
 
 class VenueDetailPage extends StatelessWidget {
   final Venue venue;
 
   const VenueDetailPage({super.key, required this.venue});
 
-  String _fixImageUrl(String url) {
-    if (url.contains('localhost')) return url.replaceAll('localhost', '10.0.2.2');
-    if (url.contains('127.0.0.1')) return url.replaceAll('127.0.0.1', '10.0.2.2');
-    return url;
-  }
+  // String _fixImageUrl(String url) {
+  //   if (url.contains('localhost')) return url.replaceAll('localhost', '10.0.2.2');
+  //   if (url.contains('127.0.0.1')) return url.replaceAll('127.0.0.1', '10.0.2.2');
+  //   return url;
+  // }
 
   @override
   Widget build(BuildContext context) {
     final fields = venue.fields;
-    final imageUrl = _fixImageUrl(fields.imageUrl);
+    final imageUrl ='http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
 
     return Scaffold(
       appBar: AppBar(
@@ -110,10 +113,23 @@ class VenueDetailPage extends StatelessWidget {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Fitur Booking akan segera hadir!")),
+                      onPressed: () async {
+                        final success = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingForm(venueId: venue.pk),
+                          ),
                         );
+
+                        // success = true kalau BookingForm sukses kirim ke Django
+                        if (success == true) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BookingListScreen(),
+                            ),
+                          );
+                        }
                       },
                       child: const Text("Book Now", style: TextStyle(fontSize: 18)),
                     ),
