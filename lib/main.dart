@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
           '/feeds': (context) => const FeedsPage(),
           '/feeds/create': (context) => const CreateFeedPage(),
         },
-
       ),
     );
   }
