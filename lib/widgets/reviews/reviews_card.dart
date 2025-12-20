@@ -106,15 +106,17 @@ class ReviewCard extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 1. info user dan rating
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     CircleAvatar(
-                      radius: 20,
+                      radius: 18,
                       backgroundColor: primaryColor.withOpacity(0.1),
-                      child: Text(initial, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                      child: Text(initial, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -137,37 +139,12 @@ class ReviewCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (review.canModify) ...[
-                      const SizedBox(width: 8),
-                      InkWell(
-                        onTap: () async {
-                          await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => ReviewFormPage(
-                                review: review,
-                                venues: venueList,
-                              ))
-                          );
-                          onReviewChanged?.call();
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6.0),
-                          child: Icon(Icons.edit_rounded, color: Colors.grey, size: 20),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () => _showDeleteConfirmation(context, request),
-                        borderRadius: BorderRadius.circular(20),
-                        child: const Padding(
-                          padding: EdgeInsets.all(6.0),
-                          child: Icon(Icons.delete_outline_rounded, color: Colors.red, size: 20),
-                        ),
-                      ),
-                    ]
                   ],
                 ),
+
                 const SizedBox(height: 12),
+
+                // 2. info lokasi
                 Row(
                   children: [
                     Icon(Icons.location_on_outlined, size: 16, color: primaryColor),
@@ -177,19 +154,60 @@ class ReviewCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(review.comment, maxLines: 3, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, height: 1.5, color: Colors.grey[800])),
+
+                // 3. image
                 if (review.imageUrl != null && review.imageUrl!.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                     child: Image.network(
                       review.imageUrl!,
-                      height: 120, width: double.infinity, fit: BoxFit.cover,
-                      errorBuilder: (_,__,___) => const SizedBox(),
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_,__,___) => const SizedBox.shrink(),
                     ),
                   ),
                 ],
+
+                const SizedBox(height: 12),
+
+                // 4. komentar
+                Text(
+                    review.comment,
+                    maxLines: 4,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 13, height: 1.5, color: Colors.grey[800], fontStyle: FontStyle.italic)
+                ),
+
+                // 5. tombol delete dan edit
+                if (review.canModify) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_note_rounded, color: Colors.blueGrey, size: 22),
+                        onPressed: () async {
+                          await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ReviewFormPage(
+                                review: review,
+                                venues: venueList,
+                              ))
+                          );
+                          onReviewChanged?.call();
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
+                        onPressed: () => _showDeleteConfirmation(context, request),
+                      ),
+                    ],
+                  ),
+                ]
               ],
             ),
           ),
