@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lapang/screens/feeds/create_feeds.dart';
 import 'package:lapang/screens/feeds/feeds_page.dart';
-import 'package:lapang/screens/feeds/my_feeds_page.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:lapang/screens/home/home_page.dart';
+import 'package:lapang/screens/home/venues_page.dart';
 import 'package:lapang/screens/auth/login.dart';
 
 void main() {
@@ -32,7 +31,6 @@ class MyApp extends StatelessWidget {
         home: const LoginPage(),
         routes: {
           '/feeds': (context) => const FeedsPage(),
-          '/feeds/my': (context) => const MyFeedsPage(),
           '/feeds/create': (context) => const CreateFeedPage(),
         },
 

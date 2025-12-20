@@ -261,6 +261,7 @@ class _FeedDetailPageState extends State<FeedDetailPage> {
         currentUsername != null && currentUsername == widget.feed.userUsername;
 
     final dateText = _formatDate(widget.feed.createdAt);
+    final bool hasThumbnail = widget.feed.thumbnail.trim().isNotEmpty;
 
     return WillPopScope(
       onWillPop: () async {
@@ -329,22 +330,25 @@ class _FeedDetailPageState extends State<FeedDetailPage> {
                   ),
 
                   // GAMBAR
-                  AspectRatio(
-                    aspectRatio: 16 / 9,
-                    child: _thumbnail.isNotEmpty
-                        ? Image.network(
-                            '${FeedDetailPage.baseUrl}/feeds/proxy-image/?url=${Uri.encodeComponent(_thumbnail)}',
-                            fit: BoxFit.cover,
-                          )
-                        : Container(
+                  if (hasThumbnail)
+                    Hero(
+                      tag: 'feed-image-${widget.feed.id}',
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: Image.network(
+                          'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(_thumbnail)}',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
                             color: Colors.grey[300],
                             child: Icon(
-                              Icons.image,
-                              size: 64,
+                              Icons.image_not_supported,
+                              size: 48,
                               color: Colors.grey[600],
                             ),
                           ),
-                  ),
+                        ),
+                      ),
+                    ),
 
                   // INFO BAR
                   Padding(

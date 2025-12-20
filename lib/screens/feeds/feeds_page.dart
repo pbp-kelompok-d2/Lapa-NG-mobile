@@ -26,6 +26,7 @@ class _FeedsPageState extends State<FeedsPage> {
     'futsal': 'Futsal',
     'basket': 'Basket',
     'badminton': 'Badminton',
+    'other': 'Other',
   };
 
   Future<List<Feed>> fetchFeeds(CookieRequest request) async {
