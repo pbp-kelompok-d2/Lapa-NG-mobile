@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lapang/models/venue.dart';
+import 'package:lapang/models/booking.dart';
+import 'package:lapang/screens/booking/booking_list_screen.dart';
+import 'package:lapang/screens/booking/booking_form.dart';
 
 class VenueDetailPage extends StatelessWidget {
   final Venue venue;
@@ -110,10 +113,23 @@ class VenueDetailPage extends StatelessWidget {
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Fitur Booking akan segera hadir!")),
+                      onPressed: () async {
+                        final success = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BookingForm(venueId: venue.pk),
+                          ),
                         );
+
+                        // success = true kalau BookingForm sukses kirim ke Django
+                        if (success == true) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BookingListScreen(),
+                            ),
+                          );
+                        }
                       },
                       child: const Text("Book Now", style: TextStyle(fontSize: 18)),
                     ),
