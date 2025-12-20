@@ -5,15 +5,17 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:lapang/screens/auth/login.dart';
 import 'package:lapang/widgets/left_drawer.dart';
-
 import 'package:http/browser_client.dart';
 import 'package:flutter/foundation.dart';
+
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 class BookingItem {
   final String id;
   final String name;
   final String venueName;
-  final String date; // display-friendly
+  final String date;
   final String startTime;
   final String endTime;
   final int? totalPrice;
@@ -42,6 +44,8 @@ class _DashboardPageState extends State<DashboardPage> {
   late final http.Client _client;
   bool _loadingUser = true;
 
+  int? _userId;
+
   @override
   void initState() {
     super.initState();
@@ -53,11 +57,21 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     _fetchUser();
-    _loadMoreBookings();
-    _loadMoreCourts();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchAllBookings();
+    });
   }
 
-  // profile
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    if (_userId != null && _allBookings.isEmpty) {
+      _fetchAllBookings();
+    }
+  }
+
   String _username = '';
   String _fullName = '';
   String _phoneRaw = '';
@@ -73,6 +87,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
+        _userId = data['id'];
+
         setState(() {
           _username = data['username'] ?? '';
           _fullName = data['name'] ?? '';
@@ -81,6 +97,8 @@ class _DashboardPageState extends State<DashboardPage> {
           _profilePicture = data['profile_picture'];
           _loadingUser = false;
         });
+
+        await _fetchAllBookings();
       } else {
         _loadingUser = false;
       }
@@ -89,108 +107,23 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // panels & infinite scroll
   final ScrollController _bookingsController = ScrollController();
-  final ScrollController _courtsController = ScrollController();
+
+  final List<BookingItem> _allBookings = [];
   final List<BookingItem> _bookings = [];
-  final List<BookingItem> _courts = [];
 
   bool _bookingsLoading = false;
-  bool _courtsLoading = false;
   bool _bookingsHasMore = true;
-  bool _courtsHasMore = true;
-  int _bookingsOffset = 0;
-  int _courtsOffset = 0;
-  final int _limit = 12;
 
-  // which tab is active: 0 = bookings, 1 = my courts
-  int _tabIndex = 0;
+  int _bookingsOffset = 0;
+  final int _limit = 12;
 
   @override
   void dispose() {
     _bookingsController.dispose();
-    _courtsController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMoreBookings() async {
-    if (_bookingsLoading || !_bookingsHasMore) return;
-    setState(() => _bookingsLoading = true);
-    await Future.delayed(const Duration(milliseconds: 650));
-
-    // TODO: replace with fetch to actual booking API
-    final newItems = List.generate(_limit, (i) {
-      final index = _bookingsOffset + i + 1;
-      return BookingItem(
-        id: 'b_$index',
-        name: 'Futsal Cipinang Melayu',
-        venueName: 'Futsal Cipinang Melayu',
-        date: 'Saturday, 8 November 2025',
-        startTime: '05:28:00',
-        endTime: '06:28:00',
-        totalPrice: 65000,
-        imageUrl: null,
-      );
-    });
-
-    setState(() {
-      _bookings.addAll(newItems);
-      _bookingsOffset += newItems.length;
-      if (_bookings.length >= 48) _bookingsHasMore = false;
-      _bookingsLoading = false;
-    });
-  }
-
-  Future<void> _loadMoreCourts() async {
-    if (_courtsLoading || !_courtsHasMore) return;
-    setState(() => _courtsLoading = true);
-    await Future.delayed(const Duration(milliseconds: 650));
-
-    final newItems = List.generate(_limit, (i) {
-      final index = _courtsOffset + i + 1;
-      return BookingItem(
-        id: 'c_$index',
-        name: 'Gedung Squash',
-        venueName: 'Gedung Squash',
-        date: 'Wednesday, 12 November 2025',
-        startTime: '19:00',
-        endTime: '20:30',
-        totalPrice: 0,
-        imageUrl: null,
-      );
-    });
-
-    setState(() {
-      _courts.addAll(newItems);
-      _courtsOffset += newItems.length;
-      if (_courts.length >= 36) _courtsHasMore = false;
-      _courtsLoading = false;
-    });
-  }
-
-  // phone formatting helper
-  String _formatPhone(String? input) {
-    if (input == null || input.isEmpty) return '';
-    var digits = input.replaceAll(RegExp(r'\D'), '');
-    if (digits.startsWith('0')) digits = '62' + digits.substring(1);
-    if (!digits.startsWith('62')) {
-      if (digits.length <= 12) digits = '62' + digits;
-    }
-    if (!digits.startsWith('62')) digits = '62' + digits;
-    final rest = digits.substring(2);
-    if (rest.isEmpty) return '+62';
-    final a = rest.length >= 3 ? rest.substring(0, 3) : rest;
-    final b = rest.length > 3
-        ? rest.substring(3, (rest.length >= 7 ? 7 : rest.length))
-        : '';
-    final c = rest.length > 7 ? rest.substring(7) : '';
-    var out = '+62 $a';
-    if (b.isNotEmpty) out += '-$b';
-    if (c.isNotEmpty) out += '-$c';
-    return out;
-  }
-
-  // Edit profile modal (simulated POST)
   Future<void> _openEditProfileModal() async {
     final usernameController = TextEditingController(text: _username);
     final nameController = TextEditingController(text: _fullName);
@@ -271,7 +204,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           number: numberController.text,
                           profilePicture: pictureController.text,
                         );
-                        Navigator.pop(context, true); // ✅ return success
+                        Navigator.pop(context, true);
                       } catch (e) {
                         ScaffoldMessenger.of(
                           context,
@@ -297,13 +230,9 @@ class _DashboardPageState extends State<DashboardPage> {
         _profilePicture = pic.isEmpty ? null : pic;
       });
 
-      // show toast
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated!'),
-          duration: Duration(milliseconds: 1800),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated!')));
     }
   }
 
@@ -315,9 +244,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }) async {
     final res = await _client.post(
       Uri.parse('http://localhost:8000/api/auth/edit/'),
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-      },
+      headers: {'X-Requested-With': 'XMLHttpRequest'},
       body: {
         'username': username,
         'name': name,
@@ -327,20 +254,12 @@ class _DashboardPageState extends State<DashboardPage> {
     );
 
     if (res.statusCode != 200) {
-      debugPrint(res.body);
       throw Exception('Edit failed');
     }
 
     final data = jsonDecode(res.body);
 
-    if (data['success'] == true) {
-      setState(() {
-        _username = data['username'];
-        _fullName = data['name'];
-        _phoneRaw = data['number'];
-        _profilePicture = data['profile_picture'];
-      });
-    } else {
+    if (data['success'] != true) {
       throw Exception(data['error'] ?? 'Edit failed');
     }
   }
@@ -348,32 +267,27 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _deleteProfile() async {
     final res = await _client.post(
       Uri.parse('http://localhost:8000/api/auth/delete/'),
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-      },
+      headers: {'X-Requested-With': 'XMLHttpRequest'},
     );
 
     if (res.statusCode != 200) {
-      debugPrint(res.body);
       throw Exception('Delete failed');
     }
 
     final data = jsonDecode(res.body);
 
     if (data['success'] == true) {
-      // Navigate back to login page after deletion
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginPage()),
-        (route) => false,
+        (_) => false,
       );
     } else {
       throw Exception(data['error'] ?? 'Delete failed');
     }
   }
 
-  // Delete confirmation (simulated)
   Future<void> _openDeleteConfirm() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -390,7 +304,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(),
               child: const Text('Yes'),
             ),
           ],
@@ -409,7 +322,77 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // Builds one list item using layout similar to renderCard()
+  Future<void> _fetchAllBookings() async {
+    final request = context.read<CookieRequest>();
+
+    if (!request.loggedIn || !request.jsonData.containsKey("user_id")) {
+      return;
+    }
+
+    final userId = request.jsonData["user_id"];
+    final url = "http://localhost:8000/booking/api/list/$userId/";
+
+    final response = await request.get(url);
+
+    _allBookings.clear();
+    for (final b in response) {
+      _allBookings.add(
+        BookingItem(
+          id: b['id'].toString(),
+          name: b['venue_name'] ?? '',
+          venueName: b['venue_name'] ?? '',
+          date: b['booking_date'] ?? '',
+          startTime: b['start_time'] ?? '',
+          endTime: b['end_time'] ?? '',
+          totalPrice: b['total_price'],
+          imageUrl: null,
+        ),
+      );
+    }
+
+    setState(() {
+      _bookings.clear();
+      _bookingsOffset = 0;
+      _bookingsHasMore = true;
+    });
+
+    _loadMoreBookings();
+  }
+
+  Future<void> _loadMoreBookings() async {
+    if (_bookingsLoading || !_bookingsHasMore) return;
+
+    setState(() => _bookingsLoading = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final nextItems = _allBookings.skip(_bookingsOffset).take(_limit).toList();
+
+    setState(() {
+      _bookings.addAll(nextItems);
+      _bookingsOffset += nextItems.length;
+      _bookingsHasMore = _bookingsOffset < _allBookings.length;
+      _bookingsLoading = false;
+    });
+  }
+
+  String _formatPhone(String? input) {
+    if (input == null || input.isEmpty) return '';
+    var digits = input.replaceAll(RegExp(r'\D'), '');
+    if (digits.startsWith('0')) digits = '62' + digits.substring(1);
+    if (!digits.startsWith('62')) digits = '62' + digits;
+    final rest = digits.substring(2);
+    if (rest.isEmpty) return '+62';
+    final a = rest.length >= 3 ? rest.substring(0, 3) : rest;
+    final b = rest.length > 3
+        ? rest.substring(3, rest.length >= 7 ? 7 : rest.length)
+        : '';
+    final c = rest.length > 7 ? rest.substring(7) : '';
+    var out = '+62 $a';
+    if (b.isNotEmpty) out += '-$b';
+    if (c.isNotEmpty) out += '-$c';
+    return out;
+  }
+
   Widget _buildItemCard(BookingItem item) {
     final price = item.totalPrice != null && item.totalPrice! > 0
         ? 'Rp ${item.totalPrice!.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]}.')}'
@@ -432,25 +415,17 @@ class _DashboardPageState extends State<DashboardPage> {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.white.withOpacity(0.6)),
             ),
-            clipBehavior: Clip.hardEdge,
-            child: item.imageUrl != null
-                ? Image.network(
-                    item.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _noImage(),
-                  )
-                : _noImage(),
+            child: _noImage(),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (item.venueName.isNotEmpty)
-                  Text(
-                    item.venueName,
-                    style: const TextStyle(color: Colors.black54, fontSize: 12),
-                  ),
+                Text(
+                  item.venueName,
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   item.name,
@@ -458,46 +433,12 @@ class _DashboardPageState extends State<DashboardPage> {
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (item.date.isNotEmpty) ...[
-                      const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 16,
-                        color: Colors.black54,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          item.date,
-                          style: const TextStyle(color: Colors.black87),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                Text(item.date),
                 const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.access_time,
-                      size: 16,
-                      color: Colors.black54,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${item.startTime}${item.endTime.isNotEmpty ? ' - ${item.endTime}' : ''}',
-                      style: const TextStyle(color: Colors.black87),
-                    ),
-                  ],
-                ),
-                if (price != null) ...[
-                  const SizedBox(height: 8),
-                  Text(price, style: const TextStyle(color: Colors.black87)),
-                ],
+                Text('${item.startTime} - ${item.endTime}'),
+                if (price != null) ...[const SizedBox(height: 8), Text(price)],
               ],
             ),
           ),
@@ -509,28 +450,16 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _noImage() {
     return Container(
       color: Colors.grey.shade200,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(
-              Icons.image_not_supported_outlined,
-              size: 28,
-              color: Colors.black26,
-            ),
-            SizedBox(height: 6),
-            Text(
-              'NO IMAGE\nAVAILABLE',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black26, fontSize: 12),
-            ),
-          ],
+      child: const Center(
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          size: 28,
+          color: Colors.black26,
         ),
       ),
     );
   }
 
-  // the panel list builder used for both bookings & courts
   Widget _buildInfiniteList({
     required ScrollController controller,
     required List<BookingItem> items,
@@ -542,6 +471,7 @@ class _DashboardPageState extends State<DashboardPage> {
       onRefresh: onRefresh,
       child: ListView.builder(
         controller: controller,
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 8, bottom: 12),
         itemCount: items.length + 1,
         itemBuilder: (context, idx) {
@@ -557,7 +487,6 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Center(child: Text('No more items')),
             );
           } else {
-            // blank space to allow scroll to trigger loadMore
             return const SizedBox(height: 48);
           }
         },
@@ -565,7 +494,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Left profile card
   Widget _buildLeftCard() {
     final avatar = _profilePicture;
     return Container(
@@ -584,7 +512,6 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
       child: Column(
         children: [
-          // avatar with white border similar to web
           CircleAvatar(
             radius: 48,
             backgroundColor: Colors.white,
@@ -664,9 +591,6 @@ class _DashboardPageState extends State<DashboardPage> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 12),
-        ],
       ),
       child: Column(
         children: [
@@ -676,19 +600,11 @@ class _DashboardPageState extends State<DashboardPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _tabIndex == 0 ? 'Booked Courts' : 'My Courts',
+                  'Booked Courts',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF065F46),
                   ),
-                ),
-                Row(
-                  children: [
-                    _tabPill('Booked Courts', 0),
-                    const SizedBox(width: 8),
-                    _tabPill('My Courts', 1),
-                  ],
                 ),
               ],
             ),
@@ -696,97 +612,23 @@ class _DashboardPageState extends State<DashboardPage> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Stack(
-                children: [
-                  Offstage(
-                    offstage: _tabIndex != 0,
-                    child: _buildInfiniteList(
-                      controller: _bookingsController,
-                      items: _bookings,
-                      isLoading: _bookingsLoading,
-                      hasMore: _bookingsHasMore,
-                      onRefresh: () async {
-                        setState(() {
-                          _bookings.clear();
-                          _bookingsOffset = 0;
-                          _bookingsHasMore = true;
-                        });
-                        await _loadMoreBookings();
-                      },
-                    ),
-                  ),
-                  Offstage(
-                    offstage: _tabIndex != 1,
-                    child: _buildInfiniteList(
-                      controller: _courtsController,
-                      items: _courts,
-                      isLoading: _courtsLoading,
-                      hasMore: _courtsHasMore,
-                      onRefresh: () async {
-                        setState(() {
-                          _courts.clear();
-                          _courtsOffset = 0;
-                          _courtsHasMore = true;
-                        });
-                        await _loadMoreCourts();
-                      },
-                    ),
-                  ),
-                ],
+              child: _buildInfiniteList(
+                controller: _bookingsController,
+                items: _bookings,
+                isLoading: _bookingsLoading,
+                hasMore: _bookingsHasMore,
+                onRefresh: () async {
+                  setState(() {
+                    _bookings.clear();
+                    _bookingsOffset = 0;
+                    _bookingsHasMore = true;
+                  });
+                  await _loadMoreBookings();
+                },
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _miniStat(String title, int value) {
-    return Column(
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value.toString(),
-          style: const TextStyle(fontWeight: FontWeight.w800),
-        ),
-      ],
-    );
-  }
-
-  // Tab pill widget
-  Widget _tabPill(String label, int index) {
-    final active = _tabIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _tabIndex = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: active ? Colors.white : Colors.white.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(999),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                  ),
-                ]
-              : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            color: active ? const Color(0xFF065F46) : Colors.black87,
-          ),
-        ),
       ),
     );
   }
@@ -801,18 +643,11 @@ class _DashboardPageState extends State<DashboardPage> {
     final rightCardHeight = screenH * 0.5;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('LapaNG'),
-        backgroundColor: const Color(0xFF10B981),
-        elevation: 0,
-        actions: const [
-          Padding(padding: EdgeInsets.only(right: 12), child: Icon(Icons.menu)),
-        ],
-      ),
+      appBar: AppBar(title: const Text('LapaNG')),
       drawer: const LeftDrawer(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        child: Center(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 980),
             child: LayoutBuilder(
