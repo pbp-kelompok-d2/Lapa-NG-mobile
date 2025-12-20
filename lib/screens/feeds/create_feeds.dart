@@ -60,10 +60,7 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
                   DropdownMenuItem(value: "soccer", child: Text("Soccer")),
                   DropdownMenuItem(value: "futsal", child: Text("Futsal")),
                   DropdownMenuItem(value: "basket", child: Text("Basket")),
-                  DropdownMenuItem(
-                    value: "badminton",
-                    child: Text("Badminton"),
-                  ),
+                  DropdownMenuItem(value: "badminton", child: Text("Badminton")),
                   DropdownMenuItem(value: "other", child: Text("Other")),
                 ],
                 onChanged: (value) {
