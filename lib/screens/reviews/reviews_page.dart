@@ -27,18 +27,29 @@ class _ReviewsPageState extends State<ReviewsPage> {
   bool _hasError = false;
 
   List<String> _venueList = [];
+  List<String> _bookedVenueNames = [];
 
   final List<String> _sportTypes = [
     'all', 'soccer', 'tennis', 'badminton', 'futsal', 'basket'
   ];
 
+  // lib/screens/reviews/reviews_page.dart
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchUserRole();
-      _initialFetch();
-      _fetchVenueNames();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final request = context.read<CookieRequest>();
+
+      if (request.loggedIn) {
+        await _fetchUserRole();
+        await _initialFetch();
+        await _fetchVenueNames();
+        await _fetchBookedVenues();
+      } else {
+        _initialFetch();
+        _fetchVenueNames();
+      }
     });
   }
 
@@ -64,6 +75,21 @@ class _ReviewsPageState extends State<ReviewsPage> {
         });
       }
     } catch (_) {}
+  }
+
+  Future<void> _fetchBookedVenues() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get("http://localhost:8000/reviews/get-booked-venues/");
+
+      if (response is List && mounted) {
+        setState(() {
+          _bookedVenueNames = List<String>.from(response);
+        });
+      }
+    } catch (e) {
+      debugPrint("Gagal mengambil data booking: $e");
+    }
   }
 
   Future<void> _initialFetch() async {
@@ -268,7 +294,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
                             return Padding(
                               padding: const EdgeInsets.only(right: 12),
                               child: FilterChip(
-                                // Hilangkan ikon centang bawaan yang mengganggu
                                 showCheckmark: false,
                                 avatar: Icon(_getSportIcon(sport), size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
                                 label: Text(_getSportLabel(sport)),
@@ -287,7 +312,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   ),
                 ),
 
-                // GRID REVIEWS (RESPONSIVE)
+                // GRID REVIEWS
                 if (_filteredReviews.isEmpty)
                   const SliverFillRemaining(hasScrollBody: false, child: Center(child: Text("Review tidak ditemukan")))
                 else
@@ -322,12 +347,32 @@ class _ReviewsPageState extends State<ReviewsPage> {
       floatingActionButton: _userRole == 'customer'
           ? FloatingActionButton.extended(
         onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (context) => ReviewFormPage(venues: _venueList)));
-          if (context.mounted) _initialFetch();
+          if (_bookedVenueNames.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Kamu hanya bisa mengulas lapangan yang sudah pernah kamu pesan."),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ReviewFormPage(
+                    venues: _bookedVenueNames,
+                  )
+              )
+          );
+
+          if (context.mounted) {
+            _initialFetch();
+          }
         },
         backgroundColor: primaryColor,
         icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
-        label: const Text("", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        label: const Text("Tulis Review", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       )
           : null,
     );

@@ -29,7 +29,7 @@ class RatingBreakdown extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Statistik", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const Text("Statistik Rating Anda", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           const SizedBox(height: 12),
           ...List.generate(5, (index) {
             int star = 5 - index;

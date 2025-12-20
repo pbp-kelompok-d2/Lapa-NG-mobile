@@ -17,6 +17,7 @@ class ReviewCard extends StatelessWidget {
     required this.venueList,
   });
 
+  // ... (Fungsi _deleteReview dan _showDeleteConfirmation tetap sama) ...
   Future<void> _deleteReview(BuildContext context, CookieRequest request) async {
     final response = await request.post(
         'http://localhost:8000/reviews/delete-review/${review.pk}/',
@@ -103,115 +104,133 @@ class ReviewCard extends StatelessWidget {
               onReviewChanged?.call();
             }
           },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. info user dan rating
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 18,
-                      backgroundColor: primaryColor.withOpacity(0.1),
-                      child: Text(initial, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                    // 1. Info User dan Rating
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: primaryColor.withOpacity(0.1),
+                          child: Text(initial, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 14)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(review.userUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text(review.createdAt, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(12)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                              const SizedBox(width: 4),
+                              Text("${review.rating}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(review.userUsername, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text(review.createdAt, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.amber[50], borderRadius: BorderRadius.circular(12)),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
-                          Text("${review.rating}", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange, fontSize: 12)),
-                        ],
-                      ),
+                    const SizedBox(height: 12),
+                    // 2. Info Lokasi
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, size: 16, color: primaryColor),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(review.venueName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        ),
+                      ],
                     ),
                   ],
                 ),
+              ),
 
-                const SizedBox(height: 12),
+              // 3. Image
+              if (review.imageUrl != null && review.imageUrl!.isNotEmpty)
+                Image.network(
+                  review.imageUrl!,
+                  height: 160, // Sedikit dikurangi agar hemat ruang
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_,__,___) => const SizedBox.shrink(),
+                ),
 
-                // 2. info lokasi
-                Row(
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.location_on_outlined, size: 16, color: primaryColor),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(review.venueName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.black87), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    // 4. Komentar
+                    Text(
+                        review.comment,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, height: 1.4, color: Colors.grey[800], fontStyle: FontStyle.italic)
                     ),
+
+                    // 5. Tombol Delete dan Edit
+                    if (review.canModify) ...[
+                      const SizedBox(height: 4),
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          _buildSmallActionButton(
+                            icon: Icons.edit_note_rounded,
+                            color: Colors.blueGrey,
+                            onTap: () async {
+                              await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ReviewFormPage(
+                                    review: review,
+                                    venues: venueList,
+                                  ))
+                              );
+                              onReviewChanged?.call();
+                            },
+                          ),
+                          const SizedBox(width: 12),
+                          _buildSmallActionButton(
+                            icon: Icons.delete_outline_rounded,
+                            color: Colors.redAccent,
+                            onTap: () => _showDeleteConfirmation(context, request),
+                          ),
+                        ],
+                      ),
+                    ]
                   ],
                 ),
-
-                // 3. image
-                if (review.imageUrl != null && review.imageUrl!.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      review.imageUrl!,
-                      height: 180,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_,__,___) => const SizedBox.shrink(),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 12),
-
-                // 4. komentar
-                Text(
-                    review.comment,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, height: 1.5, color: Colors.grey[800], fontStyle: FontStyle.italic)
-                ),
-
-                // 5. tombol delete dan edit
-                if (review.canModify) ...[
-                  const SizedBox(height: 12),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_note_rounded, color: Colors.blueGrey, size: 22),
-                        onPressed: () async {
-                          await Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => ReviewFormPage(
-                                review: review,
-                                venues: venueList,
-                              ))
-                          );
-                          onReviewChanged?.call();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 22),
-                        onPressed: () => _showDeleteConfirmation(context, request),
-                      ),
-                    ],
-                  ),
-                ]
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Widget pembantu untuk tombol aksi yang lebih hemat tempat
+  Widget _buildSmallActionButton({required IconData icon, required Color color, required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Icon(icon, color: color, size: 24),
       ),
     );
   }
