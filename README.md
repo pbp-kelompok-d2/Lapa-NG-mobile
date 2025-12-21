@@ -148,9 +148,11 @@ Aplikasi **LapaNG Mobile** terhubung dengan **LapaNG Web** (Django) menggunakan 
 ---
 
 <details>
-<summary>📝 Artikel Publikasi (Medium)</summary>
-* **Muhammad Hafizh**: [Artikel Unit Testing](Taro link  di sini pis)
+<summary>📝 Artikel (Medium)</summary>
+
+* **Muhammad Hafizh**: [Artikel Unit Testing](Taro_link_di_sini)
 * **Levina Aurellia**: [Artikel Unit Testing](https://medium.com/@levinaaurell14/unit-testing-fitur-reviews-lapang-bye-bye-bug-8eb58bd3e589)
+
 </details>
 
 ---
