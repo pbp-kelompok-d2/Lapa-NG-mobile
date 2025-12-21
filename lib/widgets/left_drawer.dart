@@ -60,6 +60,18 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ),
+
+          ListTile(
+            leading: const Icon(Icons.abc_outlined),
+            title: const Text('Equipment'),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const EquipmentEntryListPage()),
+              );
+            },
+          ),
+
           ListTile(
             leading: const Icon(Icons.forum_outlined),
             title: const Text('Feeds'),
