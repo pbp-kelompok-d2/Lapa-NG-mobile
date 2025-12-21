@@ -48,7 +48,7 @@ class _BookingFormState extends State<BookingForm> {
     };
 
     final response = await request.postJson(
-      "http://localhost:8000/booking/api/create/",
+      "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/create/",
       jsonEncode(jsonBody),
     );
 

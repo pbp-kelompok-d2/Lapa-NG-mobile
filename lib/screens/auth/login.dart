@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                       try {
                         // pbp_django_auth's request.login posts credentials and sets cookies
                         final response = await request.login(
-                          "http://localhost:8000/api/auth/login/",
+                          "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/login/",
                           {'username': username, 'password': password},
                         );
 

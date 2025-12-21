@@ -32,7 +32,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
     }
 
     final userId = request.jsonData["user_id"];
-    final url = "http://localhost:8000/booking/api/list/$userId/";
+    final url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/list/$userId/";
 
     final response = await request.get(url);
 
@@ -194,7 +194,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
   }) async {
     final request = context.read<CookieRequest>();
     final url =
-        "http://localhost:8000/booking/api/update/${booking.id}/";
+        "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/update/${booking.id}/";
 
     final response = await request.post(url, {
       "borrower_name": borrowerName,
@@ -224,7 +224,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
 
   Future<void> deleteBooking(int bookingId) async {
     final request = context.read<CookieRequest>();
-    final url = "http://localhost:8000/booking/api/delete/$bookingId/";
+    final url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/delete/$bookingId/";
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -252,7 +252,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
 
   Future<void> deleteBookingSilently(int bookingId) async {
     final request = context.read<CookieRequest>();
-    final url = "http://localhost:8000/booking/api/delete/$bookingId/";
+    final url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/delete/$bookingId/";
 
     final response = await request.post(url, {});
     if (response != null && response["success"] == true) {
@@ -275,7 +275,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
     }
 
     final url =
-        "http://localhost:8000/booking/api/update-status/${booking.id}/";
+        "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/update-status/${booking.id}/";
 
     final response = await request.post(url, {"status": newStatus});
 

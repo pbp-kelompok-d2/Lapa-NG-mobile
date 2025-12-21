@@ -189,7 +189,7 @@ class _EditEquipmentPageState extends State<EditEquipmentPage> {
                                     _formKey.currentState!.save();
 
                                     final response = await request.postJson(
-                                      'http://localhost:8000/equipment/edit-equipment/${widget.equipment.id}/',
+                                      'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/equipment/edit-equipment/${widget.equipment.id}/',
                                       jsonEncode({
                                         'name': name,
                                         'price_per_hour': pricePerHour,

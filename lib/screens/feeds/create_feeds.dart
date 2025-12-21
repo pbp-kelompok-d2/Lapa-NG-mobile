@@ -16,7 +16,7 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
   String _thumbnail = "";
   bool _isFeatured = false;
 
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id";
 
   @override
   Widget build(BuildContext context) {

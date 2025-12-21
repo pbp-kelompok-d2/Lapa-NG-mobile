@@ -13,7 +13,7 @@ class FeedsPage extends StatefulWidget {
 }
 
 class _FeedsPageState extends State<FeedsPage> {
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id";
 
   // --- STATE UNTUK FILTER ---
   String _activeFilter = 'all';      // 'all' atau 'my'

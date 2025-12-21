@@ -339,7 +339,7 @@ class ReviewDetailPage extends StatelessWidget {
 
               if (confirm == true) {
                 final response = await request.post(
-                  "http://localhost:8000/reviews/delete-review/${review.pk}/",
+                  "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/delete-review/${review.pk}/",
                   {},
                 );
 

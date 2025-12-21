@@ -56,7 +56,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Future<void> _fetchUserRole() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("http://localhost:8000/reviews/get-user-role/");
+      final response = await request.get("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/get-user-role/");
       if (mounted) {
         setState(() {
           _userRole = response['role'] ?? "guest";
@@ -68,7 +68,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Future<void> _fetchVenueNames() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("http://localhost:8000/reviews/venue-list/");
+      final response = await request.get("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/venue-list/");
       if (mounted) {
         setState(() {
           _venueList = List<String>.from(response);
@@ -80,7 +80,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Future<void> _fetchBookedVenues() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("http://localhost:8000/reviews/get-booked-venues/");
+      final response = await request.get("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/get-booked-venues/");
 
       if (response is List && mounted) {
         setState(() {
@@ -95,7 +95,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Future<void> _initialFetch() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get('http://localhost:8000/reviews/get-reviews/');
+      final response = await request.get('https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/get-reviews/');
       List<Review> fetchedData = [];
       for (var d in response) {
         if (d != null) fetchedData.add(Review.fromJson(d));

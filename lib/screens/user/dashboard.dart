@@ -227,7 +227,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final request = context.read<CookieRequest>();
 
     final response = await request
-        .post("http://localhost:8000/api/auth/edit/", {
+        .post("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/edit/", {
           "username": username,
           "name": name,
           "number": number,
@@ -245,12 +245,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final request = context.read<CookieRequest>();
 
     final response = await request.post(
-      "http://localhost:8000/api/auth/delete/",
+      "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/delete/",
       {},
     );
 
     if (response['success'] == true) {
-      await request.logout("http://localhost:8000/api/auth/logout/");
+      await request.logout("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/logout/");
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -304,7 +304,7 @@ class _DashboardPageState extends State<DashboardPage> {
     }
 
     final userId = request.jsonData["user_id"];
-    final url = "http://localhost:8000/booking/api/list/$userId/";
+    final url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/booking/api/list/$userId/";
 
     final response = await request.get(url);
 

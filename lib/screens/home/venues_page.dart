@@ -28,7 +28,7 @@ class _VenuesPageState extends State<VenuesPage> {
   }
 
   String _getEndpointUrl() {
-    const String baseUrl = "http://127.0.0.1:8000";
+    const String baseUrl = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id";
     if (_searchQuery.isNotEmpty) {
       return "$baseUrl/api/venues/search/?q=$_searchQuery";
     } else if (_selectedCategory != null) {

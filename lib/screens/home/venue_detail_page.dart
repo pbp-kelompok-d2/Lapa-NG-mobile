@@ -18,7 +18,7 @@ class VenueDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fields = venue.fields;
-    final imageUrl ='http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
+    final imageUrl ='https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
 
     return Scaffold(
       appBar: AppBar(

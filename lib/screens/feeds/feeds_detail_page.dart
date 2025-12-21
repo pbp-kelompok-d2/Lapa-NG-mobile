@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 class FeedDetailPage extends StatefulWidget {
   final Feed feed;
 
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id";
 
   const FeedDetailPage({super.key, required this.feed});
 
@@ -334,7 +334,7 @@ class _FeedDetailPageState extends State<FeedDetailPage> {
                     AspectRatio(
                       aspectRatio: 16 / 9,
                       child: Image.network(
-                        'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(_thumbnail)}',
+                        'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(_thumbnail)}',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Container(
                           color: Colors.grey[300],
