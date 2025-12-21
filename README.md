@@ -3,7 +3,7 @@
 ---
 Temukan lapangan, temukan teman ✨
 
-**Tautan APK**     : [BitRise Download](https://app.bitrise.io/app/ce7ab9cc-8f02-4e4f-a136-36f213cbc227/installable-artifacts/64d842015f8d5196/public-install-page/bc1ec282523a680c399141536cc5a1e9)
+**Tautan APK**     : [BitRise Download](https://app.bitrise.io/app/ce7ab9cc-8f02-4e4f-a136-36f213cbc227/installable-artifacts/744af1b113e01296/public-install-page/1f907d2f8d2cbfce58267efeb9bbecf9)
 
 **Video Promosi**  :
 
