@@ -147,5 +147,13 @@ Aplikasi **LapaNG Mobile** terhubung dengan **LapaNG Web** (Django) menggunakan 
 
 ---
 
+<details>
+<summary>📝 Artikel Publikasi (Medium)</summary>
+* **Muhammad Hafizh**: [Artikel Unit Testing](Taro link  di sini pis)
+* **Levina Aurellia**: [Artikel Unit Testing](https://medium.com/@levinaaurell14/unit-testing-fitur-reviews-lapang-bye-bye-bug-8eb58bd3e589)
+</details>
+
+---
+
 ## 🎨 Link Figma
 🔗 [Figma Design LapaNG](https://www.figma.com/design/W7PJXTejra9TNwidwSYNdd/PBP-TK-PTS?node-id=0-1&t=5S1UY1CwdeJr32kR-1)
