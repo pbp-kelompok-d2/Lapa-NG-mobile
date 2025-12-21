@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:lapang/screens/auth/login.dart';
 import 'package:lapang/widgets/left_drawer.dart';
-import 'package:http/browser_client.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -41,7 +37,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  late final http.Client _client;
   bool _loadingUser = true;
 
   int? _userId;
@@ -49,17 +44,8 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-
-    if (kIsWeb) {
-      _client = BrowserClient()..withCredentials = true;
-    } else {
-      _client = http.Client();
-    }
-
-    _fetchUser();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchAllBookings();
+      _initUserFromCookie();
     });
   }
 
@@ -78,33 +64,29 @@ class _DashboardPageState extends State<DashboardPage> {
   String _role = '';
   String? _profilePicture;
 
-  Future<void> _fetchUser() async {
-    try {
-      final res = await _client.get(
-        Uri.parse('http://localhost:8000/api/auth/me/'),
-        headers: {'X-Requested-With': 'XMLHttpRequest'},
+  void _initUserFromCookie() {
+    final request = context.read<CookieRequest>();
+
+    if (!request.loggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginPage()),
       );
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        _userId = data['id'];
-
-        setState(() {
-          _username = data['username'] ?? '';
-          _fullName = data['name'] ?? '';
-          _phoneRaw = data['number'] ?? '';
-          _role = data['role'] ?? '';
-          _profilePicture = data['profile_picture'];
-          _loadingUser = false;
-        });
-
-        await _fetchAllBookings();
-      } else {
-        _loadingUser = false;
-      }
-    } catch (_) {
-      _loadingUser = false;
+      return;
     }
+
+    final data = request.jsonData;
+
+    setState(() {
+      _username = data['username'] ?? '';
+      _fullName = data['name'] ?? '';
+      _phoneRaw = data['number'] ?? '';
+      _role = data['role'] ?? '';
+      _profilePicture = data['profile_picture'];
+      _loadingUser = false;
+    });
+
+    _fetchAllBookings();
   }
 
   final ScrollController _bookingsController = ScrollController();
@@ -242,41 +224,33 @@ class _DashboardPageState extends State<DashboardPage> {
     required String number,
     String? profilePicture,
   }) async {
-    final res = await _client.post(
-      Uri.parse('http://localhost:8000/api/auth/edit/'),
-      headers: {'X-Requested-With': 'XMLHttpRequest'},
-      body: {
-        'username': username,
-        'name': name,
-        'number': number,
-        'profile_picture': profilePicture ?? '',
-      },
-    );
+    final request = context.read<CookieRequest>();
 
-    if (res.statusCode != 200) {
-      throw Exception('Edit failed');
+    final response = await request
+        .post("http://localhost:8000/api/auth/edit/", {
+          "username": username,
+          "name": name,
+          "number": number,
+          "profile_picture": profilePicture ?? "",
+        });
+
+    if (response['success'] != true) {
+      throw Exception(response['error'] ?? 'Edit failed');
     }
 
-    final data = jsonDecode(res.body);
-
-    if (data['success'] != true) {
-      throw Exception(data['error'] ?? 'Edit failed');
-    }
+    request.jsonData.addAll(response);
   }
 
   Future<void> _deleteProfile() async {
-    final res = await _client.post(
-      Uri.parse('http://localhost:8000/api/auth/delete/'),
-      headers: {'X-Requested-With': 'XMLHttpRequest'},
+    final request = context.read<CookieRequest>();
+
+    final response = await request.post(
+      "http://localhost:8000/api/auth/delete/",
+      {},
     );
 
-    if (res.statusCode != 200) {
-      throw Exception('Delete failed');
-    }
-
-    final data = jsonDecode(res.body);
-
-    if (data['success'] == true) {
+    if (response['success'] == true) {
+      await request.logout("http://localhost:8000/api/auth/logout/");
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(
         context,
@@ -284,7 +258,7 @@ class _DashboardPageState extends State<DashboardPage> {
         (_) => false,
       );
     } else {
-      throw Exception(data['error'] ?? 'Delete failed');
+      throw Exception(response['error'] ?? 'Delete failed');
     }
   }
 
