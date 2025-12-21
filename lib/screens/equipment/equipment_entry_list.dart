@@ -68,7 +68,7 @@ class _EquipmentEntryListPageState extends State<EquipmentEntryListPage> {
       backgroundColor: const Color(0xFFF4F7F5),
       appBar: AppBar(
         title: const Text(
-          'Rent Your Equipment',
+          'Rent Equipment',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.1),
         ),
         elevation: 0,

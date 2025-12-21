@@ -62,7 +62,7 @@ class LeftDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.abc_outlined),
+            leading: const Icon(Icons.sports_tennis_outlined), 
             title: const Text('Equipment'),
             onTap: () {
               Navigator.pushReplacement(
