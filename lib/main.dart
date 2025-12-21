@@ -3,7 +3,7 @@ import 'package:lapang/screens/feeds/create_feeds.dart';
 import 'package:lapang/screens/feeds/feeds_page.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:lapang/screens/home/home_page.dart';
+import 'package:lapang/screens/home/venues_page.dart';
 import 'package:lapang/screens/auth/login.dart';
 
 void main() {
@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
           '/feeds': (context) => const FeedsPage(),
           '/feeds/create': (context) => const CreateFeedPage(),
         },
-
       ),
     );
   }
