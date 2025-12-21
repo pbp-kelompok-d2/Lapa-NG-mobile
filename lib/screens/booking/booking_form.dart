@@ -15,37 +15,57 @@ class BookingForm extends StatefulWidget {
 class _BookingFormState extends State<BookingForm> {
   final _formKey = GlobalKey<FormState>();
 
-  final borrower = TextEditingController();
-  final date = TextEditingController();
-  final start = TextEditingController();
-  final end = TextEditingController();
+  final borrowerCtrl = TextEditingController();
+
+  DateTime? selectedDate;
+  TimeOfDay? startTime;
+  TimeOfDay? endTime;
+
+  String _formatDate(DateTime d) =>
+      "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+
+  String _formatTime(TimeOfDay t) =>
+      "${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}";
 
   Future<void> submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (selectedDate == null || startTime == null || endTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Tanggal dan jam wajib diisi")),
+      );
+      return;
+    }
 
     final request = Provider.of<CookieRequest>(context, listen: false);
 
     final jsonBody = {
       "venue": widget.venueId,
-      "borrower_name": borrower.text,
-      "booking_date": date.text,
-      "start_time": start.text,
-      "end_time": end.text,
+      "borrower_name": borrowerCtrl.text,
+      "booking_date": _formatDate(selectedDate!),
+      "start_time": _formatTime(startTime!),
+      "end_time": _formatTime(endTime!),
     };
 
     final response = await request.postJson(
       "http://localhost:8000/booking/api/create/",
       jsonEncode(jsonBody),
     );
-    print("RESP: $response");
+
     if (response != null && response['success'] == true) {
       Navigator.pop(context, {
         "refresh": true,
-        "user_id": request.jsonData["id"]
+        "user_id": request.jsonData["user_id"],
       });
     } else {
-      final msg = response != null ? (response['error'] ?? response['message'] ?? response.toString()) : 'Unknown';
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal menyimpan booking: $msg")));
+      final msg = response != null
+          ? (response['error'] ??
+              response['message'] ??
+              response.toString())
+          : 'Unknown error';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal menyimpan booking: $msg")),
+      );
     }
   }
 
@@ -59,27 +79,96 @@ class _BookingFormState extends State<BookingForm> {
           key: _formKey,
           child: ListView(
             children: [
+              // Nama peminjam
               TextFormField(
-                controller: borrower,
-                decoration: const InputDecoration(labelText: "Nama Peminjam"),
-                validator: (v) => v!.isEmpty ? "Wajib" : null,
+                controller: borrowerCtrl,
+                decoration: const InputDecoration(
+                  labelText: "Nama Peminjam",
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) =>
+                    v == null || v.isEmpty ? "Wajib diisi" : null,
               ),
-              TextFormField(
-                controller: date,
-                decoration: const InputDecoration(labelText: "Tanggal (YYYY-MM-DD)"),
-                validator: (v) => v!.isEmpty ? "Wajib" : null,
+
+              const SizedBox(height: 16),
+
+              // Tanggal
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                title: Text(
+                  selectedDate == null
+                      ? "Pilih Tanggal"
+                      : "Tanggal: ${_formatDate(selectedDate!)}",
+                ),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate ?? DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {
+                    setState(() => selectedDate = picked);
+                  }
+                },
               ),
-              TextFormField(
-                controller: start,
-                decoration: const InputDecoration(labelText: "Jam Mulai (HH:MM)"),
-                validator: (v) => v!.isEmpty ? "Wajib" : null,
+
+              const SizedBox(height: 12),
+
+              // Jam mulai
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                title: Text(
+                  startTime == null
+                      ? "Pilih Jam Mulai"
+                      : "Mulai: ${_formatTime(startTime!)}",
+                ),
+                trailing: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: startTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setState(() => startTime = picked);
+                  }
+                },
               ),
-              TextFormField(
-                controller: end,
-                decoration: const InputDecoration(labelText: "Jam Selesai (HH:MM)"),
-                validator: (v) => v!.isEmpty ? "Wajib" : null,
+
+              const SizedBox(height: 12),
+
+              // Jam selesai
+              ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: Colors.grey.shade400),
+                ),
+                title: Text(
+                  endTime == null
+                      ? "Pilih Jam Selesai"
+                      : "Selesai: ${_formatTime(endTime!)}",
+                ),
+                trailing: const Icon(Icons.access_time),
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: endTime ?? TimeOfDay.now(),
+                  );
+                  if (picked != null) {
+                    setState(() => endTime = picked);
+                  }
+                },
               ),
+
               const SizedBox(height: 24),
+
               ElevatedButton(
                 onPressed: submit,
                 child: const Text("Simpan"),
