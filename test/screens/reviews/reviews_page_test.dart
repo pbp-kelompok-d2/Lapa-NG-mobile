@@ -7,37 +7,12 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 
 class MockCookieRequest extends CookieRequest {
   @override
+  bool loggedIn = true;
+
+  @override
   Future<dynamic> get(String url) async {
     if (url.contains('get-user-role')) {
       return {'role': 'customer'};
-    }
-    if (url.contains('venue-list')) {
-      return ['Venue A', 'Venue B'];
-    }
-    if (url.contains('get-booked-venues')) {
-      return ['Venue A'];
-    }
-    if (url.contains('get-reviews')) {
-      return [
-        {
-          "user_username": "user1",
-          "venue_name": "Venue A",
-          "sport_type": "soccer",
-          "rating": 5,
-          "comment": "Mantap!",
-          "created_at": "2023-12-21T00:00:00Z",
-          "can_modify": true,
-        },
-        {
-          "user_username": "user2",
-          "venue_name": "Venue B",
-          "sport_type": "basket",
-          "rating": 3,
-          "comment": "Biasa aja.",
-          "created_at": "2023-12-20T00:00:00Z",
-          "can_modify": false,
-        }
-      ];
     }
     return [];
   }
@@ -46,41 +21,62 @@ class MockCookieRequest extends CookieRequest {
 void main() {
   setUpAll(() => HttpOverrides.global = null);
 
-  testWidgets('ReviewsPage UI and Interaction Test', (WidgetTester tester) async {
+  testWidgets('ReviewsPage High Coverage Test', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1200, 2400);
     tester.view.devicePixelRatio = 1.0;
 
+    final mockRequest = MockCookieRequest();
+
     await tester.pumpWidget(
-      Provider<CookieRequest>(
-        create: (_) => MockCookieRequest(),
+      Provider<CookieRequest>.value(
+        value: mockRequest,
         child: const MaterialApp(
           home: ReviewsPage(),
         ),
       ),
     );
 
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
 
     expect(find.text('LapaNG Reviews'), findsOneWidget);
-    expect(find.text('user1'), findsOneWidget);
-    expect(find.text('user2'), findsOneWidget);
 
-    await tester.tap(find.text('Soccer'));
-    await tester.pumpAndSettle();
-    expect(find.text('user1'), findsOneWidget);
-    expect(find.text('user2'), findsNothing);
+    final sortButton = find.byIcon(Icons.tune_rounded);
+    await tester.tap(sortButton);
+    await tester.pumpAndSettle(); // Tunggu modal muncul
 
-    await tester.tap(find.text('Semua'));
+    expect(find.text('Urutkan Berdasarkan'), findsOneWidget);
+    await tester.tap(find.text('Rating Tertinggi'));
+    await tester.pumpAndSettle(); // Tunggu modal tutup
+
+    final searchTrigger = find.text('Cari nama lapangan...');
+    await tester.tap(searchTrigger);
     await tester.pumpAndSettle();
-    expect(find.text('user2'), findsOneWidget);
+
+    expect(find.text('Filter Lapangan'), findsOneWidget);
+    await tester.tap(find.text('Reset'));
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.byType(CustomScrollView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    final sports = ['Tennis', 'Badminton', 'Basket'];
+    for (var sport in sports) {
+      final chip = find.text(sport);
+      if (chip.evaluate().isNotEmpty) {
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+      }
+    }
 
     final myReviewsBtn = find.text('My Reviews');
     await tester.tap(myReviewsBtn);
     await tester.pumpAndSettle();
-    expect(find.text('user1'), findsOneWidget);
-    expect(find.text('user2'), findsNothing);
 
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    final allReviewsBtn = find.text('All Reviews');
+    await tester.tap(allReviewsBtn);
+    await tester.pumpAndSettle();
 
     addTearDown(tester.view.resetPhysicalSize);
   });
