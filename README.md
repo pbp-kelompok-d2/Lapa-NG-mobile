@@ -150,7 +150,7 @@ Aplikasi **LapaNG Mobile** terhubung dengan **LapaNG Web** (Django) menggunakan 
 <details>
 <summary>📝 Artikel (Medium)</summary>
 
-* **Muhammad Hafizh**: [Artikel Unit Testing](Taro_link_di_sini)
+* **Muhammad Hafizh**: [Artikel Unit Testing](https://medium.com/@muhhafizh2510/belajar-unit-testing-flutter-lewat-fitur-feeds-di-lapa-ng-ef01a0aa367c)
 * **Levina Aurellia**: [Artikel Unit Testing](https://medium.com/@levinaaurell14/unit-testing-fitur-reviews-lapang-bye-bye-bug-8eb58bd3e589)
 
 </details>
