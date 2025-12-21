@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lapang/widgets/reviews/rating_breakdown.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:lapang/models/reviews.dart';
@@ -14,35 +15,56 @@ class ReviewsPage extends StatefulWidget {
 }
 
 class _ReviewsPageState extends State<ReviewsPage> {
-  // --- STATE FILTER & SORT ---
   String _filterType = "all";
   String _sportFilter = "all";
   String? _selectedVenueFilter;
   String _sortOption = "newest";
+  String _userRole = "guest";
 
-  // List Data
   List<Review> _allReviews = [];
   List<Review> _filteredReviews = [];
   bool _isLoading = true;
   bool _hasError = false;
 
-  // Dataset Nama Lapangan
   List<String> _venueList = [];
+  List<String> _bookedVenueNames = [];
 
   final List<String> _sportTypes = [
     'all', 'soccer', 'tennis', 'badminton', 'futsal', 'basket'
   ];
 
+  // lib/screens/reviews/reviews_page.dart
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initialFetch();
-      _fetchVenueNames();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final request = context.read<CookieRequest>();
+
+      if (request.loggedIn) {
+        await _fetchUserRole();
+        await _initialFetch();
+        await _fetchVenueNames();
+        await _fetchBookedVenues();
+      } else {
+        _initialFetch();
+        _fetchVenueNames();
+      }
     });
   }
 
-  // Fetch Dataset Lapangan
+  Future<void> _fetchUserRole() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get("http://localhost:8000/reviews/get-user-role/");
+      if (mounted) {
+        setState(() {
+          _userRole = response['role'] ?? "guest";
+        });
+      }
+    } catch (_) {}
+  }
+
   Future<void> _fetchVenueNames() async {
     final request = context.read<CookieRequest>();
     try {
@@ -52,11 +74,24 @@ class _ReviewsPageState extends State<ReviewsPage> {
           _venueList = List<String>.from(response);
         });
       }
-    } catch (_) {
+    } catch (_) {}
+  }
+
+  Future<void> _fetchBookedVenues() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get("http://localhost:8000/reviews/get-booked-venues/");
+
+      if (response is List && mounted) {
+        setState(() {
+          _bookedVenueNames = List<String>.from(response);
+        });
+      }
+    } catch (e) {
+      debugPrint("Gagal mengambil data booking: $e");
     }
   }
 
-  // Fetch Data Review Utama
   Future<void> _initialFetch() async {
     final request = context.read<CookieRequest>();
     try {
@@ -78,36 +113,49 @@ class _ReviewsPageState extends State<ReviewsPage> {
     }
   }
 
-  // --- LOGIKA FILTER & SORT ---
   void _applyFilters() {
     setState(() {
-      // 1. FILTERING
       var temp = _allReviews.where((review) {
-        // Filter Tab (My Reviews)
         if (_filterType == "my_reviews" && !review.canModify) return false;
-
-        // Filter Sport
         if (_sportFilter != "all" && review.sportType.toLowerCase() != _sportFilter) return false;
-
-        // Filter Venue (Nama Lapangan)
         if (_selectedVenueFilter != null && review.venueName != _selectedVenueFilter) return false;
-
         return true;
       }).toList();
 
-      // 2. SORTING
       if (_sortOption == "rating_high") {
-        temp.sort((a, b) => b.rating.compareTo(a.rating)); // Besar ke Kecil
+        temp.sort((a, b) => b.rating.compareTo(a.rating));
       } else if (_sortOption == "rating_low") {
-        temp.sort((a, b) => a.rating.compareTo(b.rating)); // Kecil ke Besar
+        temp.sort((a, b) => a.rating.compareTo(b.rating));
       } else {
+        temp.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       }
-
       _filteredReviews = temp;
     });
   }
 
-  // MODAL FILTER VENUE (Searchable)
+  double _calculateAverageRating() {
+    if (_filteredReviews.isEmpty) return 0.0;
+    double total = _filteredReviews.fold(0, (sum, item) => sum + item.rating);
+    return total / _filteredReviews.length;
+  }
+
+  String _getSportLabel(String sport) {
+    if (sport == 'all') return 'Semua';
+    return "${sport[0].toUpperCase()}${sport.substring(1)}";
+  }
+
+  IconData _getSportIcon(String sport) {
+    switch (sport) {
+      case 'soccer': return Icons.sports_soccer;
+      case 'tennis': return Icons.sports_tennis;
+      case 'badminton': return Icons.sports_tennis;
+      case 'futsal': return Icons.sports_soccer;
+      case 'basket': return Icons.sports_basketball;
+      case 'all': return Icons.grid_view_rounded;
+      default: return Icons.sports;
+    }
+  }
+
   void _showVenueFilterPicker(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -119,8 +167,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
         builder: (_, scrollController) => Column(
           children: [
             Container(width: 40, height: 4, margin: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
-
-            // Header Modal
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -128,32 +174,19 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 children: [
                   const Text("Filter Lapangan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   TextButton(
-                    onPressed: () {
-                      setState(() { _selectedVenueFilter = null; _applyFilters(); });
-                      Navigator.pop(context);
-                    },
+                    onPressed: () { setState(() { _selectedVenueFilter = null; _applyFilters(); }); Navigator.pop(context); },
                     child: const Text("Reset", style: TextStyle(color: Colors.red)),
                   )
                 ],
               ),
             ),
-
-            Expanded(
-              child: _VenueSearchList(
-                allVenues: _venueList,
-                onSelect: (selected) {
-                  setState(() { _selectedVenueFilter = selected; _applyFilters(); });
-                  Navigator.pop(context);
-                },
-              ),
-            )
+            Expanded(child: _VenueSearchList(allVenues: _venueList, onSelect: (selected) { setState(() { _selectedVenueFilter = selected; _applyFilters(); }); Navigator.pop(context); }))
           ],
         ),
       ),
     );
   }
 
-  // MODAL SORTIR
   void _showSortModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -168,24 +201,9 @@ class _ReviewsPageState extends State<ReviewsPage> {
               Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 20), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
               const Text("Urutkan Berdasarkan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.access_time_rounded),
-                title: const Text("Terbaru"),
-                trailing: _sortOption == "newest" ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor) : null,
-                onTap: () { setState(() { _sortOption = "newest"; _applyFilters(); }); Navigator.pop(context); },
-              ),
-              ListTile(
-                leading: const Icon(Icons.star_rounded, color: Colors.amber),
-                title: const Text("Rating Tertinggi"),
-                trailing: _sortOption == "rating_high" ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor) : null,
-                onTap: () { setState(() { _sortOption = "rating_high"; _applyFilters(); }); Navigator.pop(context); },
-              ),
-              ListTile(
-                leading: const Icon(Icons.star_outline_rounded),
-                title: const Text("Rating Terendah"),
-                trailing: _sortOption == "rating_low" ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor) : null,
-                onTap: () { setState(() { _sortOption = "rating_low"; _applyFilters(); }); Navigator.pop(context); },
-              ),
+              _buildSortTile("Terbaru", "newest", Icons.access_time_rounded),
+              _buildSortTile("Rating Tertinggi", "rating_high", Icons.star_rounded),
+              _buildSortTile("Rating Terendah", "rating_low", Icons.star_outline_rounded),
               const SizedBox(height: 20),
             ],
           ),
@@ -194,34 +212,21 @@ class _ReviewsPageState extends State<ReviewsPage> {
     );
   }
 
-  // Helpers
-  IconData _getSportIcon(String sport) {
-    switch (sport) {
-      case 'soccer': return Icons.sports_soccer;
-      case 'tennis': return Icons.sports_tennis;
-      case 'badminton': return Icons.sports_tennis;
-      case 'futsal': return Icons.sports_soccer;
-      case 'basket': return Icons.sports_basketball;
-      default: return Icons.grid_view_rounded;
-    }
-  }
-  String _getSportLabel(String sport) {
-    if (sport == 'all') return 'Semua';
-    return "${sport[0].toUpperCase()}${sport.substring(1)}";
-  }
-  double _calculateAverageRating() {
-    if (_filteredReviews.isEmpty) return 0.0;
-    double total = _filteredReviews.fold(0, (sum, item) => sum + item.rating);
-    return total / _filteredReviews.length;
+  Widget _buildSortTile(String title, String value, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, color: value.contains("rating") ? Colors.amber : Colors.grey),
+      title: Text(title),
+      trailing: _sortOption == value ? Icon(Icons.check_circle, color: Theme.of(context).primaryColor) : null,
+      onTap: () { setState(() { _sortOption = value; _applyFilters(); }); Navigator.pop(context); },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final double avgRating = _calculateAverageRating();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: const Color(0xFFF5F7FA),
       drawer: const LeftDrawer(),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -229,185 +234,138 @@ class _ReviewsPageState extends State<ReviewsPage> {
           ? const Center(child: Text("Gagal memuat data."))
           : RefreshIndicator(
         onRefresh: _initialFetch,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              title: const Text('Ulasan Pengguna', style: TextStyle(fontWeight: FontWeight.bold)),
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              floating: true, pinned: true, elevation: 0,
-            ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            bool isDesktop = constraints.maxWidth > 900;
 
-            // HEADER STATISTIK
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [primaryColor, primaryColor.withOpacity(0.8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
+            return CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  title: const Text('LapaNG Reviews', style: TextStyle(fontWeight: FontWeight.bold)),
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  floating: true, pinned: true, elevation: 2,
+                  centerTitle: true,
                 ),
-                child: Row(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Rata-rata Rating", style: TextStyle(color: Colors.white70, fontSize: 14)),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(avgRating.toStringAsFixed(1), style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: Colors.white, height: 1.0)),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.star_rounded, color: Colors.amber, size: 40),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text("${_filteredReviews.length} Ulasan Total", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      ],
+
+                // HEADER (Full Width)
+                SliverToBoxAdapter(
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(color: primaryColor, borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32))),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                      child: isDesktop
+                          ? _buildDesktopHeader(primaryColor)
+                          : _buildMobileHeader(primaryColor),
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
-                      child: const Icon(Icons.bar_chart_rounded, color: Colors.white, size: 40),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            // FILTER & SORT SECTION
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  // Tombol Filter & Sort
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      children: [
-                        // Tombol Filter Venue
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _showVenueFilterPicker(context),
-                            icon: const Icon(Icons.stadium_outlined, size: 18),
-                            label: Text(
-                              _selectedVenueFilter ?? "Pilih Lapangan",
-                              maxLines: 1, overflow: TextOverflow.ellipsis,
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: _selectedVenueFilter != null ? primaryColor : Colors.black87,
-                              side: BorderSide(color: _selectedVenueFilter != null ? primaryColor : Colors.grey.shade300),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              backgroundColor: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        // Tombol Filtering
-                        OutlinedButton.icon(
-                          onPressed: () => _showSortModal(context),
-                          icon: const Icon(Icons.sort, size: 18),
-                          label: const Text("Urut"),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.black87,
-                            side: BorderSide(color: Colors.grey.shade300),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Tab Filter (All dan My Reviews)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
-                      child: Row(
-                        children: [
-                          Expanded(child: GestureDetector(onTap: () { _filterType = "all"; _applyFilters(); }, child: Container(padding: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: _filterType == "all" ? primaryColor.withOpacity(0.1) : Colors.transparent, borderRadius: const BorderRadius.horizontal(left: Radius.circular(11))), alignment: Alignment.center, child: Text("Semua Ulasan", style: TextStyle(fontWeight: FontWeight.bold, color: _filterType == "all" ? primaryColor : Colors.grey))))),
-                          Container(width: 1, height: 20, color: Colors.grey.shade300),
-                          Expanded(child: GestureDetector(onTap: () { _filterType = "my_reviews"; _applyFilters(); }, child: Container(padding: const EdgeInsets.symmetric(vertical: 12), decoration: BoxDecoration(color: _filterType == "my_reviews" ? primaryColor.withOpacity(0.1) : Colors.transparent, borderRadius: const BorderRadius.horizontal(right: Radius.circular(11))), alignment: Alignment.center, child: Text("Punya Saya", style: TextStyle(fontWeight: FontWeight.bold, color: _filterType == "my_reviews" ? primaryColor : Colors.grey))))),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Filter Chips Kategori
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: _sportTypes.map((sport) {
-                        final isSelected = _sportFilter == sport;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            label: Row(children: [Icon(_getSportIcon(sport), size: 18, color: isSelected ? Colors.white : Colors.grey[600]), const SizedBox(width: 6), Text(_getSportLabel(sport))]),
-                            selected: isSelected,
-                            selectedColor: primaryColor,
-                            labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? Colors.transparent : Colors.grey.shade300)),
-                            onSelected: (bool selected) { if (selected) { _sportFilter = sport; _applyFilters(); } },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-            // LIST REVIEW
-            if (_filteredReviews.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
+                // FILTER SECTION
+                SliverToBoxAdapter(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.filter_alt_off_rounded, size: 80, color: Colors.grey[300]),
                       const SizedBox(height: 16),
-                      const Text("Tidak ada ulasan yang cocok", style: TextStyle(color: Colors.grey, fontSize: 16)),
+                      if (_userRole == 'customer')
+                        Center(
+                          child: Container(
+                            constraints: const BoxConstraints(maxWidth: 500),
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), border: Border.all(color: Colors.grey[200]!)),
+                            child: Row(
+                              children: [
+                                _buildToggleOption("All Reviews", "all", primaryColor),
+                                _buildToggleOption("My Reviews", "my_reviews", primaryColor),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      Container(
+                        height: 60,
+                        margin: const EdgeInsets.only(top: 8),
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          children: _sportTypes.map((sport) {
+                            final isSelected = _sportFilter == sport;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 12),
+                              child: FilterChip(
+                                showCheckmark: false,
+                                avatar: Icon(_getSportIcon(sport), size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
+                                label: Text(_getSportLabel(sport)),
+                                selected: isSelected,
+                                onSelected: (bool selected) { if (selected) { setState(() { _sportFilter = sport; _applyFilters(); }); } },
+                                backgroundColor: Colors.white,
+                                selectedColor: primaryColor,
+                                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? primaryColor : Colors.grey[300]!)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              )
-            else
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                    return ReviewCard(
-                      review: _filteredReviews[index],
-                      onReviewChanged: () {
-                        _initialFetch();
-                      },
-                    );
-                  },
-                  childCount: _filteredReviews.length,
-                ),
-              ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
+                // GRID REVIEWS
+                if (_filteredReviews.isEmpty)
+                  const SliverFillRemaining(hasScrollBody: false, child: Center(child: Text("Review tidak ditemukan")))
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                            (context, index) => ReviewCard(
+                          review: _filteredReviews[index],
+                          venueList: _venueList,
+                          onReviewChanged: () => _initialFetch(),
+                        ),
+                        childCount: _filteredReviews.length,
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: constraints.maxWidth < 650 ? 1 :
+                        (constraints.maxWidth < 1100 ? 2 :
+                        (constraints.maxWidth < 1500 ? 3 : 4)),
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 20,
+                        mainAxisExtent: 400,
+                      ),
+                    ),
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            );
+          },
         ),
       ),
 
-      // TOMBOL ADD
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: _userRole == 'customer'
+          ? FloatingActionButton.extended(
         onPressed: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (context) => const ReviewFormPage()));
+          if (_bookedVenueNames.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Kamu hanya bisa mengulas lapangan yang sudah pernah kamu pesan."),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => ReviewFormPage(
+                    venues: _bookedVenueNames,
+                  )
+              )
+          );
+
           if (context.mounted) {
             _initialFetch();
           }
@@ -415,13 +373,89 @@ class _ReviewsPageState extends State<ReviewsPage> {
         backgroundColor: primaryColor,
         icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
         label: const Text("Tulis Review", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        elevation: 4,
+      )
+          : null,
+    );
+  }
+
+  Widget _buildMobileHeader(Color primaryColor) {
+    return Column(children: [_buildSearchAndSort(), const SizedBox(height: 20), RatingBreakdown(reviews: _filteredReviews)]);
+  }
+
+  Widget _buildDesktopHeader(Color primaryColor) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text("Temukan Review Lapangan Terbaik", style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          _buildSearchAndSort(),
+        ])),
+        const SizedBox(width: 40),
+        Expanded(flex: 3, child: RatingBreakdown(reviews: _filteredReviews)),
+      ],
+    );
+  }
+
+  Widget _buildSearchAndSort() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _showVenueFilterPicker(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.search, size: 20, color: Colors.grey),
+                        const SizedBox(width: 10),
+                        Expanded(child: Text(_selectedVenueFilter ?? "Cari nama lapangan...", overflow: TextOverflow.ellipsis, style: TextStyle(color: _selectedVenueFilter != null ? Colors.black87 : Colors.grey))),
+                        if (_selectedVenueFilter != null) IconButton(onPressed: () => setState(() => _selectedVenueFilter = null), icon: const Icon(Icons.close, size: 18))
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(color: Colors.grey[100], borderRadius: BorderRadius.circular(12), child: IconButton(onPressed: () => _showSortModal(context), icon: const Icon(Icons.tune_rounded))),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(children: [const Icon(Icons.star_rounded, color: Colors.amber, size: 20), const SizedBox(width: 4), Text(_calculateAverageRating().toStringAsFixed(1), style: const TextStyle(fontWeight: FontWeight.bold))]),
+              Text("${_filteredReviews.length} Ulasan", style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleOption(String title, String value, Color primaryColor) {
+    bool isSelected = _filterType == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() { _filterType = value; _applyFilters(); }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(color: isSelected ? primaryColor : Colors.transparent, borderRadius: BorderRadius.circular(25)),
+          alignment: Alignment.center,
+          child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Colors.grey[600])),
+        ),
       ),
     );
   }
 }
 
-// === WIDGET SEARCH VENUE ===
 class _VenueSearchList extends StatefulWidget {
   final List<String> allVenues;
   final Function(String) onSelect;
@@ -433,11 +467,10 @@ class _VenueSearchListState extends State<_VenueSearchList> {
   String _query = "";
   @override
   Widget build(BuildContext context) {
-    final filtered = widget.allVenues.where((venue) => venue.toLowerCase().contains(_query.toLowerCase())).toList();
+    final filtered = widget.allVenues.where((v) => v.toLowerCase().contains(_query.toLowerCase())).toList();
     return Column(children: [
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: TextField(autofocus: false, decoration: InputDecoration(hintText: "Cari nama lapangan...", prefixIcon: const Icon(Icons.search), filled: true, fillColor: Colors.grey[100], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none), contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16)), onChanged: (val) => setState(() => _query = val))),
-      const SizedBox(height: 10),
-      Expanded(child: filtered.isEmpty ? const Center(child: Text("Lapangan tidak ditemukan 😢", style: TextStyle(color: Colors.grey))) : ListView.separated(itemCount: filtered.length, separatorBuilder: (ctx, i) => const Divider(height: 1, indent: 16, endIndent: 16), itemBuilder: (context, index) => ListTile(title: Text(filtered[index], style: const TextStyle(fontSize: 16)), leading: const Icon(Icons.stadium_outlined, color: Colors.grey), onTap: () => widget.onSelect(filtered[index])))),
+      Padding(padding: const EdgeInsets.all(16), child: TextField(decoration: InputDecoration(hintText: "Cari nama lapangan...", prefixIcon: const Icon(Icons.search), filled: true, fillColor: Colors.grey[100], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)), onChanged: (v) => setState(() => _query = v))),
+      Expanded(child: filtered.isEmpty ? const Center(child: Text("Tidak ditemukan")) : ListView.builder(itemCount: filtered.length, itemBuilder: (ctx, i) => ListTile(title: Text(filtered[i]), leading: const Icon(Icons.location_on_outlined), onTap: () => widget.onSelect(filtered[i]))))
     ]);
   }
 }

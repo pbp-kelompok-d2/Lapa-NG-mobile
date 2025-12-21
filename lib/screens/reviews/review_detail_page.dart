@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:lapang/models/reviews.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'dart:convert';
 import 'package:lapang/screens/reviews/reviews_form_page.dart';
-
 
 class ReviewDetailPage extends StatelessWidget {
   final Review review;
+  final List<String> venueList;
 
-  const ReviewDetailPage({super.key, required this.review});
+  const ReviewDetailPage({
+    super.key,
+    required this.review,
+    required this.venueList
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +29,7 @@ class ReviewDetailPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: CustomScrollView(
         slivers: [
-          // HEADER IMAGE (parallax)
+          // header image (parallax)
           SliverAppBar(
             expandedHeight: hasImage ? 450.0 : 150.0,
             pinned: true,
@@ -143,7 +146,7 @@ class ReviewDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // --- RATING BOX BESAR ---
+                    // RATING BOX BESAR
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -209,7 +212,7 @@ class ReviewDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // --- USER INFO ---
+                    // USER INFO
                     Row(
                       children: [
                         CircleAvatar(
@@ -245,7 +248,7 @@ class ReviewDetailPage extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // --- KOMENTAR ---
+                    // KOMENTAR
                     const Text(
                       "Komentar",
                       style: TextStyle(
@@ -297,11 +300,13 @@ class ReviewDetailPage extends StatelessWidget {
           FloatingActionButton.extended(
             heroTag: "btnEdit",
             onPressed: () async {
-              // Navigasi ke Form dengan membawa data review
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ReviewFormPage(review: review),
+                  builder: (context) => ReviewFormPage(
+                      review: review,
+                      venues: venueList
+                  ),
                 ),
               );
               if (context.mounted) {
@@ -323,8 +328,8 @@ class ReviewDetailPage extends StatelessWidget {
               final confirm = await showDialog<bool>(
                 context: context,
                 builder: (ctx) => AlertDialog(
-                  title: const Text("Hapus Ulasan"),
-                  content: const Text("Apakah Anda yakin ingin menghapus ulasan ini?"),
+                  title: const Text("Hapus Review"),
+                  content: const Text("Apakah yakin ingin menghapus review Anda?"),
                   actions: [
                     TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
                     TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Hapus", style: TextStyle(color: Colors.red))),
@@ -333,9 +338,9 @@ class ReviewDetailPage extends StatelessWidget {
               );
 
               if (confirm == true) {
-                final response = await request.postJson(
-                  "http://localhost:8000/reviews/delete-review-ajax/${review.pk}/",
-                  jsonEncode({}),
+                final response = await request.post(
+                  "http://localhost:8000/reviews/delete-review/${review.pk}/",
+                  {},
                 );
 
                 if (context.mounted) {

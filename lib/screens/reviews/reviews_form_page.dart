@@ -6,7 +6,9 @@ import 'package:lapang/models/reviews.dart';
 
 class ReviewFormPage extends StatefulWidget {
   final Review? review;
-  const ReviewFormPage({super.key, this.review});
+  final List<String>? venues;
+
+  const ReviewFormPage({super.key, this.review, this.venues});
 
   @override
   State<ReviewFormPage> createState() => _ReviewFormPageState();
@@ -33,10 +35,14 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
   void initState() {
     super.initState();
 
-    // Fetch data dataset lapangan
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchVenueNames();
-    });
+    if (widget.venues != null && widget.venues!.isNotEmpty) {
+      _venueList = widget.venues!;
+      _isLoadingVenues = false;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        fetchVenueNames();
+      });
+    }
 
     if (widget.review != null) {
       _selectedVenue = widget.review!.venueName;
@@ -109,7 +115,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(isEdit ? 'Edit Ulasan' : 'Tulis Ulasan', style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(isEdit ? 'Edit Review' : 'Tulis Review', style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
@@ -146,12 +152,12 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               const SizedBox(height: 12),
               Wrap(spacing: 10.0, runSpacing: 10.0, children: _sportTypes.map((type) {
                 final isSelected = _sportType == type;
-                return ChoiceChip(label: Text(type[0].toUpperCase() + type.substring(1)), avatar: isSelected ? null : Icon(_getSportIcon(type), size: 18, color: Colors.grey[600]), selected: isSelected, selectedColor: primaryColor, labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal), backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? Colors.transparent : Colors.grey[300]!)), onSelected: (bool selected) { if (selected) setState(() => _sportType = type); });
+                return ChoiceChip(label: Text(type[0].toUpperCase() + type.substring(1)), avatar: isSelected ? null : Icon(_getSportIcon(type), size: 18, color: Colors.grey[600]), selected: isSelected, selectedColor: primaryColor, labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal), backgroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? Colors.transparent : Colors.grey.shade300)), onSelected: (bool selected) { if (selected) setState(() => _sportType = type); });
               }).toList()),
 
               const SizedBox(height: 24),
 
-              const Text("Ulasan Kamu", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text("Review Anda", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               TextFormField(
                 initialValue: _comment,
@@ -162,7 +168,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               ),
               const SizedBox(height: 16),
               TextFormField(
-                initialValue: _imageUrl, // Pre-fill image URL jika edit
+                initialValue: _imageUrl,
                 decoration: InputDecoration(labelText: "Link Foto (Opsional)", prefixIcon: const Icon(Icons.link_rounded), filled: true, fillColor: Colors.grey[100], border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none)),
                 onChanged: (value) => setState(() => _imageUrl = value),
               ),
@@ -184,7 +190,6 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
                 return;
               }
 
-              // SAVE: Cek URL (Create / Edit)
               String url;
               if (isEdit) {
                 url = "http://localhost:8000/reviews/edit-flutter/${widget.review!.pk}/";
@@ -213,7 +218,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
               }
             }
           },
-          child: Text(isEdit ? "Simpan Perubahan" : "Kirim Ulasan", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          child: Text(isEdit ? "Simpan Perubahan" : "Kirim", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         ),
       ),
     );
