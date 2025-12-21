@@ -25,7 +25,7 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Buat Feed Baru',
+          'Create New Feed',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.green,
@@ -60,7 +60,10 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
                   DropdownMenuItem(value: "soccer", child: Text("Soccer")),
                   DropdownMenuItem(value: "futsal", child: Text("Futsal")),
                   DropdownMenuItem(value: "basket", child: Text("Basket")),
-                  DropdownMenuItem(value: "badminton", child: Text("Badminton")),
+                  DropdownMenuItem(
+                    value: "badminton",
+                    child: Text("Badminton"),
+                  ),
                   DropdownMenuItem(value: "other", child: Text("Other")),
                 ],
                 onChanged: (value) {
@@ -104,7 +107,9 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
                     if (response['ok'] == true) {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feed berhasil dibuat!')),
+                        const SnackBar(
+                          content: Text('Feed created successfully!'),
+                        ),
                       );
                       Navigator.pop(context, true); // balik ke list
                     } else {
@@ -118,7 +123,7 @@ class _CreateFeedPageState extends State<CreateFeedPage> {
                     }
                   }
                 },
-                child: const Text('Kirim'),
+                child: const Text('Submit'),
               ),
             ],
           ),

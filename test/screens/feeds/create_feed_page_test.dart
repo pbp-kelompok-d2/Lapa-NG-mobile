@@ -15,39 +15,57 @@ class MockCookieRequest extends CookieRequest {
   Future<dynamic> post(String url, dynamic body) async {
     postCallCount++;
     lastPostUrl = url;
-    // di kode asli kita kirim Map<String, String>, jadi aman di-cast
+
+    //kirim Map<String, String>
     lastPostBody = Map<String, String>.from(body as Map);
 
     if (succeedCreate) {
       return {'ok': true};
-    } else {
-      return {'ok': false, 'detail': 'Some error from server'};
     }
+    return {'ok': false, 'detail': 'Some error from server'};
   }
 }
 
-/// Bungkus widget dengan Provider<CookieRequest> + MaterialApp.
-Widget wrapWithProviders(Widget child, {MockCookieRequest? request}) {
+///Bungkus widget dengan Provider<CookieRequest> + MaterialApp
+Widget wrapWithProviders(
+  Widget child, {
+  MockCookieRequest? request,
+  NavigatorObserver? navObserver,
+}) {
   final mock = request ?? MockCookieRequest();
 
   return Provider<CookieRequest>.value(
     value: mock,
-    child: MaterialApp(home: child),
+    child: MaterialApp(
+      home: child,
+      navigatorObservers: navObserver != null ? [navObserver] : const [],
+    ),
   );
+}
+
+/// Observer buat ngecek Navigator.pop terpanggil
+class TestNavigatorObserver extends NavigatorObserver {
+  int popCount = 0;
+
+  @override
+  void didPop(Route route, Route? previousRoute) {
+    popCount++;
+    super.didPop(route, previousRoute);
+  }
 }
 
 void main() {
   group('CreateFeedPage', () {
-    testWidgets('menampilkan semua field form dengan benar', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('menampilkan semua field form dengan benar',
+        (WidgetTester tester) async {
       await tester.pumpWidget(wrapWithProviders(const CreateFeedPage()));
 
-      // Cek AppBar title
-      expect(find.text('Buat Feed Baru'), findsOneWidget);
+      // AppBar title
+      expect(find.text('Create New Feed'), findsOneWidget);
 
-      // TextFormField isi feed
+      // Field-field utama
       expect(find.widgetWithText(TextFormField, 'Isi Feed'), findsOneWidget);
+      expect(find.widgetWithText(TextFormField, 'Thumbnail URL'), findsOneWidget);
 
       // Dropdown kategori
       expect(
@@ -55,75 +73,67 @@ void main() {
         findsOneWidget,
       );
 
-      // TextFormField thumbnail
-      expect(
-        find.widgetWithText(TextFormField, 'Thumbnail URL'),
-        findsOneWidget,
-      );
-
       // Switch featured
       expect(find.widgetWithText(SwitchListTile, 'Featured'), findsOneWidget);
 
-      // Tombol kirim
-      expect(find.widgetWithText(FilledButton, 'Kirim'), findsOneWidget);
+      // Tombol submit
+      expect(find.widgetWithText(FilledButton, 'Submit'), findsOneWidget);
     });
 
-    testWidgets('validasi gagal ketika Isi Feed kosong', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('validasi gagal ketika Isi Feed kosong',
+        (WidgetTester tester) async {
       final mock = MockCookieRequest();
 
-      await tester.pumpWidget(
-        wrapWithProviders(const CreateFeedPage(), request: mock),
-      );
+      await tester.pumpWidget(wrapWithProviders(const CreateFeedPage(), request: mock));
 
-      // Langsung tekan tombol Kirim tanpa mengisi apapun
-      await tester.tap(find.widgetWithText(FilledButton, 'Kirim'));
+      // Tap submit tanpa isi apapun
+      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
       await tester.pumpAndSettle();
 
-      // Harus muncul pesan error "Wajib diisi"
+      // Harus muncul pesan validasi
       expect(find.text('Wajib diisi'), findsOneWidget);
 
-      // post() tidak boleh dipanggil
+      // Tidak boleh ada request post
       expect(mock.postCallCount, 0);
     });
 
     testWidgets('berhasil membuat feed ketika form valid dan server OK',
         (WidgetTester tester) async {
       final mock = MockCookieRequest()..succeedCreate = true;
+      final nav = TestNavigatorObserver();
 
       await tester.pumpWidget(
-        wrapWithProviders(const CreateFeedPage(), request: mock),
+        wrapWithProviders(const CreateFeedPage(), request: mock, navObserver: nav),
       );
 
-      // Isi field "Isi Feed"
+      // Isi feed
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Isi Feed'),
         'Lagi olahraga di Lapa-NG nih!',
       );
 
-      // Ganti kategori (misal ke Futsal)
+      // Buka dropdown kategori dan pilih Futsal
       await tester.tap(find.byType(DropdownButtonFormField<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Futsal').last);
       await tester.pumpAndSettle();
 
-      // Isi thumbnail URL
+      // Isi thumbnail
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Thumbnail URL'),
         'https://contoh.com/gambar.jpg',
       );
 
-      // Nyalakan switch Featured
+      // Nyalakan Featured
       await tester.tap(find.widgetWithText(SwitchListTile, 'Featured'));
       await tester.pumpAndSettle();
 
-      // Tekan tombol Kirim
-      await tester.tap(find.widgetWithText(FilledButton, 'Kirim'));
-      await tester.pump(); // validator + onSaved
-      await tester.pump(const Duration(milliseconds: 100));
+      // Tap Submit
+      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+      await tester.pump(); // mulai async
+      await tester.pump(const Duration(milliseconds: 50)); // selesaikan future
 
-      // post() harus terpanggil sekali dengan body yang benar
+      // post() kepanggil dan payload benar
       expect(mock.postCallCount, 1);
       expect(mock.lastPostUrl, contains('/feeds/create-ajax/'));
       expect(mock.lastPostBody?['content'], 'Lagi olahraga di Lapa-NG nih!');
@@ -131,40 +141,40 @@ void main() {
       expect(mock.lastPostBody?['thumbnail'], 'https://contoh.com/gambar.jpg');
       expect(mock.lastPostBody?['is_featured'], 'on');
 
-      // Tidak perlu cek SnackBar sukses karena route sudah di-pop.
-      // Cukup pastikan tidak ada exception yang dilempar setelah ini.
+      // Harus pop balik ke page sebelumnya
+      await tester.pumpAndSettle();
+      expect(nav.popCount, greaterThanOrEqualTo(1));
+
+      // Tidak ada exception
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('menampilkan snackbar error ketika server mengembalikan gagal', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('menampilkan snackbar error ketika server mengembalikan gagal',
+        (WidgetTester tester) async {
       final mock = MockCookieRequest()..succeedCreate = false;
 
-      await tester.pumpWidget(
-        wrapWithProviders(const CreateFeedPage(), request: mock),
-      );
+      await tester.pumpWidget(wrapWithProviders(const CreateFeedPage(), request: mock));
 
-      // Isi "Isi Feed" supaya lolos validasi
+      // Isi feed supaya lolos validasi
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Isi Feed'),
         'Isi feed untuk test error',
       );
 
-      // Biarkan kategori default "soccer" dan thumbnail kosong juga tidak apa-apa
-      await tester.tap(find.widgetWithText(FilledButton, 'Kirim'));
-      await tester.pump(); // validator + onSaved
-      await tester.pump(const Duration(milliseconds: 100));
+      // Tap Submit
+      await tester.tap(find.widgetWithText(FilledButton, 'Submit'));
+      await tester.pump(); // trigger onPressed
+      await tester.pumpAndSettle(); // tunggu snackbar
 
       expect(mock.postCallCount, 1);
 
-      // Muncul snackbar error dengan message dari mock
-      await tester.pumpAndSettle();
-
+      // SnackBar error harus muncul
       expect(
         find.text('Gagal membuat feed: Some error from server'),
         findsOneWidget,
       );
+
+      expect(tester.takeException(), isNull);
     });
   });
 }
