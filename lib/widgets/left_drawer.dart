@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lapang/screens/equipment/equipment_entry_list.dart';
 import 'package:lapang/screens/home/home_page.dart';
 import 'package:lapang/screens/home/venues_page.dart';
 import 'package:lapang/screens/feeds/feeds_page.dart';
@@ -60,6 +61,18 @@ class LeftDrawer extends StatelessWidget {
               );
             },
           ),
+
+          ListTile(
+            leading: const Icon(Icons.sports_tennis_outlined), 
+            title: const Text('Equipment'),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const EquipmentEntryListPage()),
+              );
+            },
+          ),
+
           ListTile(
             leading: const Icon(Icons.forum_outlined),
             title: const Text('Feeds'),

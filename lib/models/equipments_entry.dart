@@ -1,10 +1,13 @@
 import 'dart:convert';
 
+import 'package:lapang/models/custom_user.dart';
+
 List<EquipmentEntry> equipmentEntryFromJson(String str) => List<EquipmentEntry>.from(json.decode(str).map((x) => EquipmentEntry.fromJson(x)));
 
 String equipmentEntryToJson(List<EquipmentEntry> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class EquipmentEntry {
+
     String id;
     String name;
     String pricePerHour;
@@ -13,7 +16,7 @@ class EquipmentEntry {
     int quantity;
     bool available;
     String thumbnail;
-    String userUsername;
+    CustomUser user;
 
     EquipmentEntry({
         required this.id,
@@ -24,7 +27,7 @@ class EquipmentEntry {
         required this.quantity,
         required this.available,
         required this.thumbnail,
-        required this.userUsername,
+        required this.user,
     });
 
     factory EquipmentEntry.fromJson(Map<String, dynamic> json) => EquipmentEntry(
@@ -36,7 +39,7 @@ class EquipmentEntry {
         quantity: json["quantity"],
         available: json["available"],
         thumbnail: json["thumbnail"],
-        userUsername: json["user_username"],
+        user: CustomUser.fromJson(json["user"]),
     );
 
     Map<String, dynamic> toJson() => {
@@ -48,6 +51,6 @@ class EquipmentEntry {
         "quantity": quantity,
         "available": available,
         "thumbnail": thumbnail,
-        "user_username": userUsername,
+        "user": user.toJson(),
     };
 }
