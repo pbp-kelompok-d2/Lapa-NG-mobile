@@ -20,14 +20,29 @@ class LeftDrawer extends StatelessWidget {
     return Drawer(
       child: ListView(
         children: [
-          const UserAccountsDrawerHeader(
-            accountName: Text("Lapa-NG User"),
-            accountEmail: Text("user@lapa-ng.com"),
+          UserAccountsDrawerHeader(
+            accountName: Text(
+              request.loggedIn
+                  ? (request.jsonData['name'] ??
+                      request.jsonData['username'] ??
+                      'User')
+                  : 'Guest',
+            ),
+            accountEmail: const SizedBox.shrink(),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Colors.green, size: 40),
+              backgroundImage: request.loggedIn &&
+                      request.jsonData['profile_picture'] != null &&
+                      request.jsonData['profile_picture'].toString().isNotEmpty
+                  ? NetworkImage(request.jsonData['profile_picture'])
+                  : null,
+              child: request.loggedIn &&
+                      request.jsonData['profile_picture'] != null &&
+                      request.jsonData['profile_picture'].toString().isNotEmpty
+                  ? null
+                  : const Icon(Icons.person, color: Colors.green, size: 40),
             ),
-            decoration: BoxDecoration(color: Colors.green),
+            decoration: const BoxDecoration(color: Colors.green),
           ),
           ListTile(
             leading: const Icon(Icons.home_outlined),

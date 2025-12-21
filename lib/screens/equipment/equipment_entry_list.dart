@@ -235,7 +235,7 @@ class _EquipmentEntryListPageState extends State<EquipmentEntryListPage> {
   }
 
   Future<void> _handleDelete(CookieRequest request, BuildContext context, EquipmentEntry item) async {
-    final response = await request.post('http://localhost:8000/equipment/delete-equipment/${item.id}/', {});
+    final response = await request.post('https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/equipment/delete-equipment/${item.id}/', {});
     if (response['status'] == 'success') {
       setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Equipment deleted successfully')));
