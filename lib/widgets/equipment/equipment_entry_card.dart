@@ -200,7 +200,7 @@ class EquipmentEntryCard extends StatelessWidget {
       return _buildPlaceholder();
     }
 
-    final imageUrl = 'http://localhost:8000/equipment/get-equipment/?url=${Uri.encodeComponent(equipment.thumbnail)}';
+    final imageUrl = 'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/equipment/get-equipment/?url=${Uri.encodeComponent(equipment.thumbnail)}';
 
     return Image.network(
       imageUrl,

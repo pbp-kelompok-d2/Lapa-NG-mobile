@@ -37,7 +37,7 @@ class _EquipmentEntryListPageState extends State<EquipmentEntryListPage> {
   };
 
   Future<List<EquipmentEntry>> fetchEquipment(CookieRequest request) async {
-    final response = await request.get('http://localhost:8000/equipment/json/');
+    final response = await request.get('https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/equipment/json/');
     var data = response;
 
     List<EquipmentEntry> listEquipment = [];

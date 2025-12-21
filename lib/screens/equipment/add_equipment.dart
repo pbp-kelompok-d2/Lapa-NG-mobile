@@ -168,7 +168,7 @@ class _EquipmentFormPageState extends State<EquipmentFormPage> {
                                 if (_formKey.currentState!.validate()) {
                                   _formKey.currentState!.save();
                                   final response = await request.postJson(
-                                    'http://localhost:8000/equipment/create-flutter/',
+                                    'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/equipment/create-flutter/',
                                     jsonEncode({
                                       'name': name,
                                       'price_per_hour': pricePerHour,

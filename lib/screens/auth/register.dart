@@ -250,7 +250,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                       try {
                         final response = await request.post(
-                          "http://localhost:8000/api/auth/register/",
+                          "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/register/",
                           payload,  
                         );
 

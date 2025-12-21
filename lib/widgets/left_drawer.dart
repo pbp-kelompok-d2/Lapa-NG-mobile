@@ -115,7 +115,7 @@ class LeftDrawer extends StatelessWidget {
               title: const Text('Logout', style: TextStyle(color: Colors.red)),
               onTap: () async {
                 final response = await request.logout(
-                  "http://127.0.0.1:8000/api/auth/logout/",
+                  "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/api/auth/logout/",
                 );
                 if (context.mounted) {
                   String message = response["message"];

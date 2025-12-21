@@ -9,7 +9,7 @@ class FeedCard extends StatelessWidget {
   final bool isMine;
   final VoidCallback? onChanged;
 
-  static const String baseUrl = "http://localhost:8000";
+  static const String baseUrl = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id";
 
   const FeedCard({
     super.key,
@@ -331,7 +331,7 @@ class FeedCard extends StatelessWidget {
                 AspectRatio(
                   aspectRatio: 16 / 9,
                   child: Image.network(
-                    'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
+                    'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(feed.thumbnail)}',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[300],

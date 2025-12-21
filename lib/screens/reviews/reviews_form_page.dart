@@ -63,7 +63,7 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
   Future<void> fetchVenueNames() async {
     final request = context.read<CookieRequest>();
     try {
-      final response = await request.get("http://localhost:8000/reviews/venue-list/");
+      final response = await request.get("https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/venue-list/");
       if (mounted) {
         setState(() {
           _venueList = List<String>.from(response);
@@ -192,9 +192,9 @@ class _ReviewFormPageState extends State<ReviewFormPage> {
 
               String url;
               if (isEdit) {
-                url = "http://localhost:8000/reviews/edit-flutter/${widget.review!.pk}/";
+                url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/edit-flutter/${widget.review!.pk}/";
               } else {
-                url = "http://localhost:8000/reviews/create-flutter/";
+                url = "https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/create-flutter/";
               }
 
               final response = await request.postJson(

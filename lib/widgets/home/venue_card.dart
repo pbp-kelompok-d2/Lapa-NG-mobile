@@ -16,7 +16,7 @@ class VenueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final fields = venue.fields;
     // Menggunakan 127.0.0.1 untuk Localhost view
-    final imageUrl = 'http://127.0.0.1:8000/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
+    final imageUrl = 'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/proxy-image/?url=${Uri.encodeComponent(fields.imageUrl)}';
 
     return Card(
       margin: EdgeInsets.zero,

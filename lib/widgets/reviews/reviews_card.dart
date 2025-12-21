@@ -20,7 +20,7 @@ class ReviewCard extends StatelessWidget {
   // ... (Fungsi _deleteReview dan _showDeleteConfirmation tetap sama) ...
   Future<void> _deleteReview(BuildContext context, CookieRequest request) async {
     final response = await request.post(
-        'http://localhost:8000/reviews/delete-review/${review.pk}/',
+        'https://abdurrahman-ammar-lapang.pbp.cs.ui.ac.id/reviews/delete-review/${review.pk}/',
         {}
     );
 
