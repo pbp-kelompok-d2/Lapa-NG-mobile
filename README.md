@@ -1,8 +1,9 @@
 ## 🏟️ LapaNG Mobile
+[![Build Status](https://app.bitrise.io/app/ce7ab9cc-8f02-4e4f-a136-36f213cbc227/status.svg?token=3pWXTYNnnpd2jEVifun77A&branch=main)](https://app.bitrise.io/app/ce7ab9cc-8f02-4e4f-a136-36f213cbc227)
 ---
 Temukan lapangan, temukan teman ✨
 
-**Tautan APK**     :     
+**Tautan APK**     : [BitRise Download](https://app.bitrise.io/app/ce7ab9cc-8f02-4e4f-a136-36f213cbc227/installable-artifacts/64d842015f8d5196/public-install-page/bc1ec282523a680c399141536cc5a1e9)
 **Video Promosi**  :
 
 <details>
