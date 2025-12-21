@@ -225,7 +225,6 @@ class EquipmentEntryCard extends StatelessWidget {
     );
   }
 
-  // Tampilan Placeholder
   Widget _buildPlaceholder({bool isError = false}) {
     return Container(
       color: Colors.grey.shade200,
