@@ -471,6 +471,7 @@ class _DashboardPageState extends State<DashboardPage> {
       onRefresh: onRefresh,
       child: ListView.builder(
         controller: controller,
+        shrinkWrap: true,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(top: 8, bottom: 12),
         itemCount: items.length + 1,
@@ -583,7 +584,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildRightCard(double height) {
     return Container(
-      height: height,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF9DD3FF), Color(0xFF89E0C6)],
@@ -592,43 +592,38 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Booked Courts',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                  ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              child: Text(
+                'Booked Courts',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: _buildInfiniteList(
-                controller: _bookingsController,
-                items: _bookings,
-                isLoading: _bookingsLoading,
-                hasMore: _bookingsHasMore,
-                onRefresh: () async {
-                  setState(() {
-                    _bookings.clear();
-                    _bookingsOffset = 0;
-                    _bookingsHasMore = true;
-                  });
-                  await _loadMoreBookings();
-                },
               ),
             ),
-          ),
-        ],
+
+            _buildInfiniteList(
+              controller: _bookingsController,
+              items: _bookings,
+              isLoading: _bookingsLoading,
+              hasMore: _bookingsHasMore,
+              onRefresh: () async {
+                setState(() {
+                  _bookings.clear();
+                  _bookingsOffset = 0;
+                  _bookingsHasMore = true;
+                });
+                await _loadMoreBookings();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -643,7 +638,13 @@ class _DashboardPageState extends State<DashboardPage> {
     final rightCardHeight = screenH * 0.5;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('LapaNG')),
+      appBar: AppBar(
+        title: const Text(
+          'User Dashboard',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green,
+      ),
       drawer: const LeftDrawer(),
       body: Center(
         child: Padding(
